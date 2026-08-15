@@ -1,0 +1,6 @@
+{
+  "name": "Wilderness Dojo Antigravity Billing AI",
+  "description": "Agentic AI billing and medical insurance invoicing system integrated with wildernessdojo.home.blog, featuring real-time payment processing, medical wellness records, and automated ICD/CPT coding.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
