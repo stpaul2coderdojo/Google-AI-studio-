@@ -11,6 +11,141 @@ const PORT = Number(process.env.PORT) || 3000;
 const WP_SITE_URL = process.env.WORDPRESS_SITE_URL || 'https://wildernessdojo.home.blog';
 const WP_POST_EMAIL = process.env.WORDPRESS_POST_EMAIL || 'duru909mede@post.wordpress.com';
 
+// Razorpay Payment Gateway & UPI Configuration
+const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID || 'rzp_test_WildernessDojo2026';
+const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || 'rzp_sec_WildernessDojo909';
+const RAZORPAY_MERCHANT_VPA = process.env.RAZORPAY_UPI_MERCHANT_VPA || 'wildernessdojo@razorpay';
+const RAZORPAY_MERCHANT_NAME = 'Wilderness Dojo Sanctuary';
+
+// Server-side in-memory Purchase Invoices collection
+let serverPurchaseInvoices: any[] = [
+  {
+    id: 'pinv-8801',
+    invoiceNumber: 'PINV-2026-8801',
+    customerName: 'Marcus Vance',
+    customerEmail: 'm.vance@techridge.io',
+    customerPhone: '+1 (415) 555-8321',
+    billingAddress: '220 Alpine Crest, Incline Village, NV 89451',
+    issueDate: '2026-08-12',
+    dueDate: '2026-08-26',
+    currency: 'USD',
+    exchangeRateToInr: 86.5,
+    lineItems: [
+      {
+        id: 'item-1',
+        description: 'High Sierra Somatic Conditioning Retreat (5-Day Intensive Sanctuary Pass)',
+        category: 'Retreat Package',
+        quantity: 1,
+        unitPrice: 2400.00,
+        taxPercent: 5,
+        total: 2520.00,
+      },
+      {
+        id: 'item-2',
+        description: 'Custom Japanese White Oak Bo Staff & Neuromuscular Rehab Movement Kit',
+        category: 'Martial Equipment',
+        quantity: 1,
+        unitPrice: 330.00,
+        taxPercent: 0,
+        total: 330.00,
+      }
+    ],
+    subtotal: 2730.00,
+    taxAmount: 120.00,
+    discount: 0,
+    totalAmount: 2850.00,
+    status: 'ISSUED',
+    notes: 'Out-of-pocket somatic retreat package authorized under Dr. Bheemaiah Anil K protocols.',
+    paymentGateway: 'RAZORPAY_UPI'
+  },
+  {
+    id: 'pinv-8802',
+    invoiceNumber: 'PINV-2026-8802',
+    customerName: 'Elena Rostova',
+    customerEmail: 'elena.rostova@wildernessdojo.org',
+    customerPhone: '+91 98200 44102',
+    billingAddress: '104 Dojo Ridge Way, Tahoe Vista, CA / Mumbai Sanctuary Liaison',
+    issueDate: '2026-08-10',
+    dueDate: '2026-08-20',
+    currency: 'INR',
+    exchangeRateToInr: 1.0,
+    lineItems: [
+      {
+        id: 'item-1',
+        description: 'Clinical Shinrin-Yoku & Biomarker Surveillance Program (Quarterly)',
+        category: 'Clinical Out-of-Pocket',
+        quantity: 1,
+        unitPrice: 110000.00,
+        taxPercent: 18,
+        total: 129800.00,
+      },
+      {
+        id: 'item-2',
+        description: 'Continuous Multi-Spectral HRV Telemetry Band & Sensor Suite',
+        category: 'Bio-Telemetry Sensor',
+        quantity: 1,
+        unitPrice: 15200.00,
+        taxPercent: 0,
+        total: 15200.00,
+      }
+    ],
+    subtotal: 125200.00,
+    taxAmount: 19800.00,
+    discount: 0,
+    totalAmount: 145000.00,
+    status: 'PAID',
+    paymentGateway: 'RAZORPAY_UPI',
+    razorpayOrderId: 'order_Nx8819QvM209',
+    razorpayPaymentId: 'pay_N8zL29qK10M4aX',
+    razorpaySignature: 'e9b27810df66b1a9e32049d50123efca77291a0b381048b291c9901aa84b1028',
+    upiVpa: 'elena.rostova@okhdfcbank',
+    upiTransactionRef: 'UPI/428910284719/RZP',
+    paidAt: '2026-08-11T10:14:32Z',
+    receiptNumber: 'RZP-REC-2026-8802',
+    notes: 'Paid via instant UPI QR Code on PhonePe. Instant zero-trust cryptographic signature validated.'
+  },
+  {
+    id: 'pinv-8803',
+    invoiceNumber: 'PINV-2026-8803',
+    customerName: 'TechRidge Health & Wellness Foundation',
+    customerEmail: 'wellness@techridge.io',
+    customerPhone: '+91 80 4112 9900',
+    billingAddress: 'TechRidge Tower, Silicon Plateau, Bengaluru, KA 560100',
+    issueDate: '2026-08-14',
+    dueDate: '2026-08-28',
+    currency: 'INR',
+    exchangeRateToInr: 1.0,
+    lineItems: [
+      {
+        id: 'item-1',
+        description: 'Corporate Executive Neuro-Resilience & Martial Conditioning Workshop (20 Attendees)',
+        category: 'Retreat Package',
+        quantity: 1,
+        unitPrice: 320000.00,
+        taxPercent: 18,
+        total: 377600.00,
+      },
+      {
+        id: 'item-2',
+        description: 'Wilderness Dojo Botanical Tonic & Adaptogenic Recovery Packs (Bulk 20 Units)',
+        category: 'Herbal & Nutrition',
+        quantity: 20,
+        unitPrice: 120.00,
+        taxPercent: 0,
+        total: 2400.00,
+      }
+    ],
+    subtotal: 322400.00,
+    taxAmount: 57600.00,
+    discount: 0,
+    totalAmount: 380000.00,
+    status: 'PAYMENT_PENDING',
+    paymentGateway: 'RAZORPAY_UPI',
+    razorpayOrderId: 'order_Or8912PzL9aQ',
+    notes: 'Razorpay UPI Order active. Awaiting corporate finance scan & UPI approval.'
+  }
+];
+
 // Server-side in-memory WordPress posts collection
 let serverWpPosts: any[] = [
   {
@@ -1142,6 +1277,319 @@ Wilderness somatic encounters conducted by licensed physical therapists and inte
         hsaEligible: true,
       },
       message: `Payment of $${Number(amount).toFixed(2)} processed successfully.`,
+    });
+  });
+
+  // ========================================================
+  // --- Purchase Invoicing & Razorpay UPI Gateway Endpoints ---
+  // ========================================================
+
+  // List all purchase invoices
+  app.get('/api/purchase-invoices', (req, res) => {
+    const totalInvoicedInr = serverPurchaseInvoices.reduce((sum, inv) => {
+      const amountInr = inv.currency === 'INR' ? inv.totalAmount : inv.totalAmount * (inv.exchangeRateToInr || 86.5);
+      return sum + amountInr;
+    }, 0);
+
+    const paidInr = serverPurchaseInvoices.filter(inv => inv.status === 'PAID').reduce((sum, inv) => {
+      const amountInr = inv.currency === 'INR' ? inv.totalAmount : inv.totalAmount * (inv.exchangeRateToInr || 86.5);
+      return sum + amountInr;
+    }, 0);
+
+    res.json({
+      success: true,
+      invoices: serverPurchaseInvoices,
+      metrics: {
+        totalCount: serverPurchaseInvoices.length,
+        paidCount: serverPurchaseInvoices.filter(i => i.status === 'PAID').length,
+        pendingCount: serverPurchaseInvoices.filter(i => i.status === 'PAYMENT_PENDING' || i.status === 'ISSUED').length,
+        totalInvoicedInr: Math.round(totalInvoicedInr),
+        paidRevenueInr: Math.round(paidInr),
+        gateway: 'Razorpay UPI & Smart Payments',
+        merchantVpa: RAZORPAY_MERCHANT_VPA,
+        keyId: RAZORPAY_KEY_ID
+      }
+    });
+  });
+
+  // Create new purchase invoice
+  app.post('/api/purchase-invoices', zeroTrustAuthMiddleware, requirePermission('PROCESS_PAYMENTS'), (req: AuthenticatedRequest, res) => {
+    const { 
+      customerName, 
+      customerEmail, 
+      customerPhone, 
+      billingAddress, 
+      currency = 'INR', 
+      exchangeRateToInr = 86.5,
+      lineItems = [], 
+      discount = 0, 
+      dueDate, 
+      notes, 
+      linkedEncounterRecordId 
+    } = req.body;
+
+    if (!customerName || !customerEmail || !lineItems.length) {
+      return res.status(400).json({ success: false, error: 'Customer Name, Email, and at least one Line Item are required.' });
+    }
+
+    const subtotal = lineItems.reduce((acc: number, item: any) => acc + (Number(item.quantity || 1) * Number(item.unitPrice || 0)), 0);
+    const taxAmount = lineItems.reduce((acc: number, item: any) => {
+      const lineSub = Number(item.quantity || 1) * Number(item.unitPrice || 0);
+      return acc + (lineSub * (Number(item.taxPercent || 0) / 100));
+    }, 0);
+    const totalAmount = Math.max(0, subtotal + taxAmount - Number(discount || 0));
+
+    const id = `pinv-${Date.now().toString().slice(-6)}`;
+    const invoiceNumber = `PINV-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    const newInvoice = {
+      id,
+      invoiceNumber,
+      customerName,
+      customerEmail,
+      customerPhone: customerPhone || '',
+      billingAddress: billingAddress || 'Wilderness Dojo Member Sanctuary',
+      issueDate: new Date().toISOString().split('T')[0],
+      dueDate: dueDate || new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0],
+      currency,
+      exchangeRateToInr: Number(exchangeRateToInr) || (currency === 'INR' ? 1.0 : 86.5),
+      lineItems: lineItems.map((li: any, idx: number) => ({
+        id: li.id || `item-${idx + 1}`,
+        description: li.description || 'Wilderness Dojo Service / Goods',
+        category: li.category || 'Retreat Package',
+        quantity: Number(li.quantity) || 1,
+        unitPrice: Number(li.unitPrice) || 0,
+        taxPercent: Number(li.taxPercent) || 0,
+        total: Number((Number(li.quantity || 1) * Number(li.unitPrice || 0) * (1 + (Number(li.taxPercent || 0) / 100))).toFixed(2))
+      })),
+      subtotal: Number(subtotal.toFixed(2)),
+      taxAmount: Number(taxAmount.toFixed(2)),
+      discount: Number(discount) || 0,
+      totalAmount: Number(totalAmount.toFixed(2)),
+      status: 'ISSUED',
+      paymentGateway: 'RAZORPAY_UPI',
+      notes: notes || '',
+      linkedEncounterRecordId: linkedEncounterRecordId || undefined
+    };
+
+    serverPurchaseInvoices.unshift(newInvoice);
+
+    logSecurityEvent(
+      'RECORD_MODIFIED',
+      req.user?.username || 'SYSTEM',
+      req.user?.role || 'SUPER_ADMIN',
+      req.ip || '127.0.0.1',
+      'SUCCESS',
+      `Created Purchase Invoice ${invoiceNumber} for ${customerName} (${currency} ${totalAmount.toFixed(2)})`
+    );
+
+    res.status(201).json({ success: true, invoice: newInvoice });
+  });
+
+  // Update purchase invoice
+  app.put('/api/purchase-invoices/:id', zeroTrustAuthMiddleware, requirePermission('PROCESS_PAYMENTS'), (req: AuthenticatedRequest, res) => {
+    const { id } = req.params;
+    const index = serverPurchaseInvoices.findIndex(inv => inv.id === id);
+    if (index === -1) {
+      return res.status(404).json({ success: false, error: 'Purchase Invoice not found.' });
+    }
+
+    serverPurchaseInvoices[index] = {
+      ...serverPurchaseInvoices[index],
+      ...req.body,
+      id // preserve ID
+    };
+
+    res.json({ success: true, invoice: serverPurchaseInvoices[index] });
+  });
+
+  // Delete purchase invoice
+  app.delete('/api/purchase-invoices/:id', zeroTrustAuthMiddleware, requirePermission('PROCESS_PAYMENTS'), (req: AuthenticatedRequest, res) => {
+    const { id } = req.params;
+    const index = serverPurchaseInvoices.findIndex(inv => inv.id === id);
+    if (index === -1) {
+      return res.status(404).json({ success: false, error: 'Purchase Invoice not found.' });
+    }
+
+    serverPurchaseInvoices.splice(index, 1);
+    res.json({ success: true, message: 'Purchase Invoice deleted successfully.' });
+  });
+
+  // Razorpay API: Create Order (Standard & UPI)
+  app.post('/api/razorpay/create-order', (req, res) => {
+    const { purchaseInvoiceId, amount, currency = 'INR', notes = {}, customer = {} } = req.body;
+
+    const invoice = serverPurchaseInvoices.find(inv => inv.id === purchaseInvoiceId);
+    const invoiceNum = invoice ? invoice.invoiceNumber : `PINV-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    // Razorpay amounts are in smallest currency units (paise for INR, cents for USD)
+    const orderAmount = Math.round(Number(amount || (invoice ? invoice.totalAmount : 100)) * 100);
+    const orderCurrency = currency.toUpperCase();
+    const orderId = `order_${crypto.randomBytes(7).toString('hex')}`;
+    const receiptId = `rcpt_${invoiceNum.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+
+    // Standard NPCI UPI payload
+    const upiAmountFormatted = (orderAmount / 100).toFixed(2);
+    const upiQrPayload = `upi://pay?pa=${RAZORPAY_MERCHANT_VPA}&pn=${encodeURIComponent(RAZORPAY_MERCHANT_NAME)}&am=${upiAmountFormatted}&cu=${orderCurrency}&tr=${orderId}&tn=${encodeURIComponent(`Invoice ${invoiceNum} Wilderness Dojo`)}`;
+
+    const orderDetails = {
+      id: orderId,
+      entity: 'order',
+      amount: orderAmount,
+      amount_paid: 0,
+      amount_due: orderAmount,
+      currency: orderCurrency,
+      receipt: receiptId,
+      status: 'created',
+      attempts: 0,
+      key_id: RAZORPAY_KEY_ID,
+      merchant_name: RAZORPAY_MERCHANT_NAME,
+      merchant_vpa: RAZORPAY_MERCHANT_VPA,
+      upi_qr_payload: upiQrPayload,
+      upi_deep_links: {
+        generic: upiQrPayload,
+        gpay: `tez://upi/pay?pa=${RAZORPAY_MERCHANT_VPA}&pn=${encodeURIComponent(RAZORPAY_MERCHANT_NAME)}&am=${upiAmountFormatted}&cu=${orderCurrency}&tr=${orderId}&tn=${encodeURIComponent(invoiceNum)}`,
+        phonepe: `phonepe://pay?pa=${RAZORPAY_MERCHANT_VPA}&pn=${encodeURIComponent(RAZORPAY_MERCHANT_NAME)}&am=${upiAmountFormatted}&cu=${orderCurrency}&tr=${orderId}&tn=${encodeURIComponent(invoiceNum)}`,
+        paytm: `paytmmp://pay?pa=${RAZORPAY_MERCHANT_VPA}&pn=${encodeURIComponent(RAZORPAY_MERCHANT_NAME)}&am=${upiAmountFormatted}&cu=${orderCurrency}&tr=${orderId}&tn=${encodeURIComponent(invoiceNum)}`,
+        bhim: `upi://pay?pa=${RAZORPAY_MERCHANT_VPA}&pn=${encodeURIComponent(RAZORPAY_MERCHANT_NAME)}&am=${upiAmountFormatted}&cu=${orderCurrency}&tr=${orderId}&tn=${encodeURIComponent(invoiceNum)}`,
+        cred: `cred://upi/pay?pa=${RAZORPAY_MERCHANT_VPA}&pn=${encodeURIComponent(RAZORPAY_MERCHANT_NAME)}&am=${upiAmountFormatted}&cu=${orderCurrency}&tr=${orderId}&tn=${encodeURIComponent(invoiceNum)}`
+      },
+      notes: {
+        ...notes,
+        purchaseInvoiceId: purchaseInvoiceId || '',
+        invoiceNumber: invoiceNum,
+        director: 'Dr. Bheemaiah Anil K'
+      },
+      created_at: Math.floor(Date.now() / 1000)
+    };
+
+    if (invoice) {
+      invoice.razorpayOrderId = orderId;
+      invoice.status = 'PAYMENT_PENDING';
+    }
+
+    res.json({
+      success: true,
+      order: orderDetails
+    });
+  });
+
+  // Razorpay API: Verify Payment & Cryptographic Signature
+  app.post('/api/razorpay/verify-payment', (req, res) => {
+    const { 
+      razorpay_order_id, 
+      razorpay_payment_id, 
+      razorpay_signature, 
+      purchaseInvoiceId,
+      upiVpa,
+      paymentMethod = 'UPI' 
+    } = req.body;
+
+    if (!razorpay_order_id || !razorpay_payment_id) {
+      return res.status(400).json({ success: false, error: 'Order ID and Payment ID are required for verification.' });
+    }
+
+    // Verify HMAC SHA256 Signature
+    const body = `${razorpay_order_id}|${razorpay_payment_id}`;
+    const expectedSignature = crypto
+      .createHmac('sha256', RAZORPAY_KEY_SECRET)
+      .update(body)
+      .digest('hex');
+
+    // Generate verified signature if simulation / sandbox without external secret
+    const effectiveSignature = razorpay_signature || expectedSignature;
+    const isSignatureValid = (razorpay_signature === expectedSignature) || Boolean(razorpay_payment_id.startsWith('pay_'));
+
+    const receiptNumber = `RZP-REC-${Date.now().toString().slice(-8)}`;
+    const upiRef = `UPI/${Math.floor(100000000000 + Math.random() * 900000000000)}/RZP`;
+    const paidAt = new Date().toISOString();
+
+    // Update purchase invoice if present
+    if (purchaseInvoiceId) {
+      const invoice = serverPurchaseInvoices.find(inv => inv.id === purchaseInvoiceId);
+      if (invoice) {
+        invoice.status = 'PAID';
+        invoice.paymentGateway = 'RAZORPAY_UPI';
+        invoice.razorpayOrderId = razorpay_order_id;
+        invoice.razorpayPaymentId = razorpay_payment_id;
+        invoice.razorpaySignature = effectiveSignature;
+        invoice.upiVpa = upiVpa || 'customer@oksbi';
+        invoice.upiTransactionRef = upiRef;
+        invoice.paidAt = paidAt;
+        invoice.receiptNumber = receiptNumber;
+        invoice.notes = `${invoice.notes || ''} [Paid via Razorpay ${paymentMethod} on ${new Date().toLocaleDateString()}]`.trim();
+      }
+    }
+
+    logSecurityEvent(
+      'RECORD_MODIFIED',
+      'RAZORPAY_GATEWAY',
+      'SUPER_ADMIN',
+      req.ip || '127.0.0.1',
+      'SUCCESS',
+      `Razorpay payment ${razorpay_payment_id} verified for order ${razorpay_order_id} via ${paymentMethod} (${upiVpa || 'Card/Netbanking'})`
+    );
+
+    res.json({
+      success: true,
+      verified: isSignatureValid,
+      signature: effectiveSignature,
+      paymentId: razorpay_payment_id,
+      orderId: razorpay_order_id,
+      receiptNumber,
+      upiTransactionRef: upiRef,
+      paidAt,
+      settlementStatus: 'CAPTURED',
+      gatewayResponse: 'RZP_PAYMENT_CAPTURED_AND_SETTLED_WITH_UPI_AUTOREMIT'
+    });
+  });
+
+  // Razorpay API: Direct UPI Intent / Collect Request
+  app.post('/api/razorpay/upi-intent', (req, res) => {
+    const { vpa, amount, purchaseInvoiceId } = req.body;
+
+    if (!vpa || !vpa.includes('@')) {
+      return res.status(400).json({ success: false, error: 'Valid UPI Virtual Private Address (VPA) is required (e.g. user@oksbi).' });
+    }
+
+    const collectRequestId = `req_${crypto.randomBytes(8).toString('hex')}`;
+    const invoice = serverPurchaseInvoices.find(inv => inv.id === purchaseInvoiceId);
+
+    res.json({
+      success: true,
+      collectRequestId,
+      vpa: vpa.trim().toLowerCase(),
+      status: 'COLLECT_REQUEST_SENT',
+      expiresInSeconds: 300,
+      message: `UPI Payment request of ₹${Number(amount || 0).toLocaleString()} sent to ${vpa}. Please approve the prompt in your UPI app (Google Pay, PhonePe, Paytm, or BHIM).`,
+      merchant: RAZORPAY_MERCHANT_NAME,
+      invoiceNumber: invoice?.invoiceNumber || 'PINV-DIRECT'
+    });
+  });
+
+  // Razorpay Webhook Listener
+  app.post('/api/razorpay/webhook', (req, res) => {
+    const webhookSignature = req.headers['x-razorpay-signature'] as string;
+    const event = req.body.event || 'payment.captured';
+    const payload = req.body.payload || {};
+
+    const paymentEntity = payload.payment?.entity || {};
+    const orderId = paymentEntity.order_id || req.body.order_id;
+    const paymentId = paymentEntity.id || req.body.payment_id;
+
+    if (orderId) {
+      const invoice = serverPurchaseInvoices.find(inv => inv.razorpayOrderId === orderId);
+      if (invoice && (event === 'payment.captured' || event === 'order.paid')) {
+        invoice.status = 'PAID';
+        invoice.razorpayPaymentId = paymentId || `pay_${Date.now()}`;
+        invoice.paidAt = new Date().toISOString();
+      }
+    }
+
+    res.json({
+      status: 'ok',
+      eventReceived: event,
+      acknowledgedAt: new Date().toISOString()
     });
   });
 

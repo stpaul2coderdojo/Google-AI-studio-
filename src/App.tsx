@@ -9,6 +9,7 @@ import { InvoicesClaimsView } from './components/InvoicesClaimsView';
 import { RealtimePaymentModal } from './components/RealtimePaymentModal';
 import { WordPressBridgePanel } from './components/WordPressBridgePanel';
 import { PatientPaymentPage } from './components/PatientPaymentPage';
+import { PurchaseInvoicingPanel } from './components/PurchaseInvoicingPanel';
 import { JSONDatabasePage } from './components/JSONDatabasePage';
 import { RestApiWebhookPage } from './components/RestApiWebhookPage';
 import { IAMSecurityGate } from './components/IAMSecurityGate';
@@ -19,7 +20,8 @@ import {
   SAMPLE_WELLNESS_RECORDS, 
   INSURANCE_PAYERS, 
   INITIAL_WORDPRESS_POSTS,
-  INITIAL_PATIENTS
+  INITIAL_PATIENTS,
+  INITIAL_PURCHASE_INVOICES
 } from './data/mockData';
 import { 
   MedicalWellnessRecord, 
@@ -31,7 +33,8 @@ import {
   AntigravityAgentStep,
   InvoiceAuditEntry,
   NavigationTab,
-  Patient
+  Patient,
+  PurchaseInvoice
 } from './types';
 
 function AuthenticatedApp() {
@@ -57,6 +60,28 @@ function AuthenticatedApp() {
   const [isSyncingWp, setIsSyncingWp] = useState<boolean>(false);
   const [selectedInvoiceDetail, setSelectedInvoiceDetail] = useState<Invoice | null>(null);
   const [paymentModalInvoice, setPaymentModalInvoice] = useState<Invoice | null>(null);
+
+  // Purchase Invoices (Direct Sanctuary Sales & Razorpay UPI Gateway)
+  const [purchaseInvoices, setPurchaseInvoices] = useState<PurchaseInvoice[]>(() => {
+    const saved = localStorage.getItem('wilderness_purchase_invoices_v2');
+    return saved ? JSON.parse(saved) : INITIAL_PURCHASE_INVOICES;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('wilderness_purchase_invoices_v2', JSON.stringify(purchaseInvoices));
+  }, [purchaseInvoices]);
+
+  // Sync purchase invoices from backend on mount
+  useEffect(() => {
+    apiFetch('/api/purchase-invoices')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.invoices) && data.invoices.length > 0) {
+          setPurchaseInvoices(data.invoices);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
 
   // Invoices list state (pre-populated with 2 realistic baseline claims)
@@ -296,6 +321,7 @@ function AuthenticatedApp() {
         isSyncing={isSyncingWp}
         totalInvoicesCount={invoices.length}
         totalRecordsCount={records.length}
+        totalPurchaseInvoicesCount={purchaseInvoices.length}
         onOpenIAMSecurityModal={() => setIsIAMModalOpen(true)}
       />
 
@@ -375,6 +401,15 @@ function AuthenticatedApp() {
             onAddNewInvoice={(newInv) => {
               setInvoices(prev => [newInv, ...prev]);
             }}
+          />
+        )}
+
+        {activeTab === 'purchase-invoices' && (
+          <PurchaseInvoicingPanel
+            invoices={purchaseInvoices}
+            onAddNewInvoice={(newInv) => setPurchaseInvoices(prev => [newInv, ...prev])}
+            onUpdateInvoice={(updated) => setPurchaseInvoices(prev => prev.map(inv => inv.id === updated.id ? updated : inv))}
+            onDeleteInvoice={(id) => setPurchaseInvoices(prev => prev.filter(inv => inv.id !== id))}
           />
         )}
 

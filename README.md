@@ -7,12 +7,13 @@
 [![Docker](https://img.shields.io/badge/docker-ready-2496ed.svg)](https://www.docker.com/)
 [![Render](https://img.shields.io/badge/render-blueprint-46E3B7.svg)](https://render.com/)
 [![Zero-Trust IAM](https://img.shields.io/badge/IAM-NIST%20SP%20800--207-success.svg)](https://csrc.nist.gov/publications/detail/sp/800-207/final)
+[![Razorpay & UPI](https://img.shields.io/badge/Razorpay-UPI%202.0%20Gateway-blueviolet.svg)](https://razorpay.com/)
 [![WordPress Bridge](https://img.shields.io/badge/WordPress-wildernessdojo.home.blog-blue.svg)](https://wildernessdojo.home.blog)
 
 > **Autonomous Medical AI Billing, Invoicing, and WordPress Post-by-Email Ecosystem Gateway**  
 > Developed for the **XPRIZE Devpost Hackathon**.  
 > **Director & Lead Architect**: **Dr. Bheemaiah Anil K**, Director, Wilderness Dojo (`bheemaiah@alumni.iitm.ac.in`).  
-> Combines Zero-Trust IAM continuous verification, Gemini clinical NLP extraction, real-time EDI 837P clearinghouse adjudication, instant HSA/FSA copay settlement, and a bi-directional bridge to [`wildernessdojo.home.blog`](https://wildernessdojo.home.blog) via Post-by-Email (`duru909mede@post.wordpress.com`).
+> Combines Zero-Trust IAM continuous verification, Gemini clinical NLP extraction, real-time EDI 837P clearinghouse adjudication, instant HSA/FSA copay settlement, **commercial Purchase Invoicing with Razorpay & UPI 2.0 gateway**, and a bi-directional bridge to [`wildernessdojo.home.blog`](https://wildernessdojo.home.blog) via Post-by-Email (`duru909mede@post.wordpress.com`).
 
 ---
 
@@ -50,6 +51,7 @@
 - **NIST SP 800-207 Zero-Trust IAM**: Fine-grained RBAC with cryptographic session tokens and immutable audit trail.
 - **Server-Side Gemini AI**: Powers clinical note coding, denial appeals, and automated blog generation.
 - **EDI 837P Transaction Generator**: Generates industry-standard ANSI X12 837 Professional transaction sets ready for payer ingestion.
+- **Purchase Invoicing & Razorpay Smart Gateway**: Direct sanctuary sales, somatic retreat passes, and equipment procurement with instant **Razorpay UPI 2.0 dynamic QR codes, deep links (GPay, PhonePe, Paytm, BHIM, Cred), and collect push intents**.
 - **Automated WordPress Shortcode Envelope**: Encapsulates posts with `[category]`, `[tags]`, `[status]`, and `[slug]` shortcodes for WordPress Post-by-Email ingestion.
 - **HMAC-SHA256 Webhook Telemetry**: Secure webhook listener for external payment triggers and status synchronizations.
 - **Multi-Stage Production Docker Build**: Ultra-lightweight Alpine container with non-root security.
@@ -261,6 +263,12 @@ git push -u origin main
 | Method | Endpoint | Description | Auth Required |
 |---|---|---|---|
 | `GET` | `/api/health` | Service health status and WordPress bridge connectivity | No |
+| `GET` | `/api/purchase-invoices` | List commercial purchase invoices and retreat billing | No |
+| `POST` | `/api/purchase-invoices` | Create new purchase invoice with itemized line items | Bearer Token |
+| `POST` | `/api/razorpay/create-order` | Generate Razorpay order with dynamic UPI QR code & deep links | No |
+| `POST` | `/api/razorpay/verify-payment` | Verify HMAC-SHA256 signature and settle UPI/card payment | No |
+| `POST` | `/api/razorpay/upi-intent` | Dispatch instant collect request to customer UPI VPA | No |
+| `POST` | `/api/razorpay/webhook` | Ingest Razorpay payment capture and refund events | No |
 | `GET` | `/api/wordpress/posts` | Retrieve published and queued WordPress articles | No |
 | `POST` | `/api/wordpress/post-blog` | Post a blog to WordPress via Post-by-Email gateway | Bearer Token |
 | `POST` | `/api/wordpress/generate-blog` | AI generation of wilderness clinical articles | Bearer Token |

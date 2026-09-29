@@ -1,4 +1,4 @@
-import { MedicalWellnessRecord, InsuranceProvider, WordPressPost, Patient } from '../types';
+import { MedicalWellnessRecord, InsuranceProvider, WordPressPost, Patient, PurchaseInvoice } from '../types';
 
 export const INITIAL_PATIENTS: Patient[] = [
   {
@@ -543,4 +543,170 @@ export const PATIENT_LONGITUDINAL_HISTORIES: Record<string, {
     ]
   }
 };
+
+export const INITIAL_PURCHASE_INVOICES: PurchaseInvoice[] = [
+  {
+    id: 'pinv-8801',
+    invoiceNumber: 'PINV-2026-8801',
+    customerName: 'Marcus Vance',
+    customerEmail: 'm.vance@techridge.io',
+    customerPhone: '+1 (415) 555-8321',
+    billingAddress: '220 Alpine Crest, Incline Village, NV 89451',
+    issueDate: '2026-08-12',
+    dueDate: '2026-08-26',
+    currency: 'USD',
+    exchangeRateToInr: 86.5,
+    lineItems: [
+      {
+        id: 'item-1',
+        description: 'High Sierra Somatic Conditioning Retreat (5-Day Intensive Sanctuary Pass)',
+        category: 'Retreat Package',
+        quantity: 1,
+        unitPrice: 2400.00,
+        taxPercent: 5,
+        total: 2520.00,
+      },
+      {
+        id: 'item-2',
+        description: 'Custom Japanese White Oak Bo Staff & Neuromuscular Rehab Movement Kit',
+        category: 'Martial Equipment',
+        quantity: 1,
+        unitPrice: 330.00,
+        taxPercent: 0,
+        total: 330.00,
+      }
+    ],
+    subtotal: 2730.00,
+    taxAmount: 120.00,
+    discount: 0,
+    totalAmount: 2850.00,
+    status: 'ISSUED',
+    notes: 'Out-of-pocket somatic retreat package authorized under Dr. Bheemaiah Anil K protocols.',
+    paymentGateway: 'RAZORPAY_UPI'
+  },
+  {
+    id: 'pinv-8802',
+    invoiceNumber: 'PINV-2026-8802',
+    customerName: 'Elena Rostova',
+    customerEmail: 'elena.rostova@wildernessdojo.org',
+    customerPhone: '+91 98200 44102',
+    billingAddress: '104 Dojo Ridge Way, Tahoe Vista, CA / Mumbai Sanctuary Liaison',
+    issueDate: '2026-08-10',
+    dueDate: '2026-08-20',
+    currency: 'INR',
+    exchangeRateToInr: 1.0,
+    lineItems: [
+      {
+        id: 'item-1',
+        description: 'Clinical Shinrin-Yoku & Biomarker Surveillance Program (Quarterly)',
+        category: 'Clinical Out-of-Pocket',
+        quantity: 1,
+        unitPrice: 110000.00,
+        taxPercent: 18,
+        total: 129800.00,
+      },
+      {
+        id: 'item-2',
+        description: 'Continuous Multi-Spectral HRV Telemetry Band & Sensor Suite',
+        category: 'Bio-Telemetry Sensor',
+        quantity: 1,
+        unitPrice: 15200.00,
+        taxPercent: 0,
+        total: 15200.00,
+      }
+    ],
+    subtotal: 125200.00,
+    taxAmount: 19800.00,
+    discount: 0,
+    totalAmount: 145000.00,
+    status: 'PAID',
+    paymentGateway: 'RAZORPAY_UPI',
+    razorpayOrderId: 'order_Nx8819QvM209',
+    razorpayPaymentId: 'pay_N8zL29qK10M4aX',
+    razorpaySignature: 'e9b27810df66b1a9e32049d50123efca77291a0b381048b291c9901aa84b1028',
+    upiVpa: 'elena.rostova@okhdfcbank',
+    upiTransactionRef: 'UPI/428910284719/RZP',
+    paidAt: '2026-08-11T10:14:32Z',
+    receiptNumber: 'RZP-REC-2026-8802',
+    notes: 'Paid via instant UPI QR Code on PhonePe. Instant zero-trust cryptographic signature validated.'
+  },
+  {
+    id: 'pinv-8803',
+    invoiceNumber: 'PINV-2026-8803',
+    customerName: 'TechRidge Health & Wellness Foundation',
+    customerEmail: 'wellness@techridge.io',
+    customerPhone: '+91 80 4112 9900',
+    billingAddress: 'TechRidge Tower, Silicon Plateau, Bengaluru, KA 560100',
+    issueDate: '2026-08-14',
+    dueDate: '2026-08-28',
+    currency: 'INR',
+    exchangeRateToInr: 1.0,
+    lineItems: [
+      {
+        id: 'item-1',
+        description: 'Corporate Executive Neuro-Resilience & Martial Conditioning Workshop (20 Attendees)',
+        category: 'Retreat Package',
+        quantity: 1,
+        unitPrice: 320000.00,
+        taxPercent: 18,
+        total: 377600.00,
+      },
+      {
+        id: 'item-2',
+        description: 'Wilderness Dojo Botanical Tonic & Adaptogenic Recovery Packs (Bulk 20 Units)',
+        category: 'Herbal & Nutrition',
+        quantity: 20,
+        unitPrice: 120.00,
+        taxPercent: 0,
+        total: 2400.00,
+      }
+    ],
+    subtotal: 322400.00,
+    taxAmount: 57600.00,
+    discount: 0,
+    totalAmount: 380000.00,
+    status: 'PAYMENT_PENDING',
+    paymentGateway: 'RAZORPAY_UPI',
+    razorpayOrderId: 'order_Or8912PzL9aQ',
+    notes: 'Razorpay UPI Order active. Awaiting corporate finance scan & UPI approval.'
+  },
+  {
+    id: 'pinv-8804',
+    invoiceNumber: 'PINV-2026-8804',
+    customerName: 'Sophia Al-Mansoor',
+    customerEmail: 'sophia.almansoor@healthpost.net',
+    customerPhone: '+1 (916) 555-7734',
+    billingAddress: '55 Pine Needle Way, Truckee, CA 96161',
+    issueDate: '2026-08-15',
+    dueDate: '2026-08-30',
+    currency: 'USD',
+    exchangeRateToInr: 86.5,
+    lineItems: [
+      {
+        id: 'item-1',
+        description: 'Private Somatic Autonomic Reset Program (10 Direct Physician Consults)',
+        category: 'Clinical Out-of-Pocket',
+        quantity: 1,
+        unitPrice: 1350.00,
+        taxPercent: 0,
+        total: 1350.00,
+      },
+      {
+        id: 'item-2',
+        description: 'Adaptogenic Wild Sierra Pine Needle Formulation (3-Month Regimen)',
+        category: 'Herbal & Nutrition',
+        quantity: 1,
+        unitPrice: 100.00,
+        taxPercent: 0,
+        total: 100.00,
+      }
+    ],
+    subtotal: 1450.00,
+    taxAmount: 0.00,
+    discount: 0,
+    totalAmount: 1450.00,
+    status: 'DRAFT',
+    notes: 'Draft purchase invoice pending patient consultation review.'
+  }
+];
 

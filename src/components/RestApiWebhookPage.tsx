@@ -154,6 +154,118 @@ const ENDPOINTS_CATALOG: RestApiEndpointSpec[] = [
     }
   },
   {
+    id: 'ep-purchase-invoices-get',
+    category: 'Payment Gateway',
+    method: 'GET',
+    path: '/api/purchase-invoices',
+    description: 'Retrieve all commercial purchase invoices, retreat passes, and equipment orders',
+    requiresAuth: false,
+    sampleResponse: {
+      success: true,
+      invoices: [
+        {
+          id: 'pinv-8801',
+          invoiceNumber: 'PINV-2026-8801',
+          customerName: 'Marcus Vance',
+          totalAmount: 2850.00,
+          currency: 'USD',
+          status: 'ISSUED',
+          paymentGateway: 'RAZORPAY_UPI'
+        }
+      ],
+      metrics: {
+        totalCount: 4,
+        paidCount: 2,
+        pendingCount: 2,
+        totalInvoicedInr: 896950,
+        gateway: 'Razorpay UPI & Smart Payments'
+      }
+    }
+  },
+  {
+    id: 'ep-razorpay-create-order',
+    category: 'Payment Gateway',
+    method: 'POST',
+    path: '/api/razorpay/create-order',
+    description: 'Create Razorpay Order with automated NPCI UPI dynamic QR Code payload and deep links',
+    requiresAuth: false,
+    sampleRequestBody: {
+      purchaseInvoiceId: 'pinv-8801',
+      amount: 246525.00,
+      currency: 'INR',
+      notes: {
+        customer: 'Marcus Vance',
+        invoiceNumber: 'PINV-2026-8801'
+      }
+    },
+    sampleResponse: {
+      success: true,
+      order: {
+        id: 'order_Nx8819QvM209',
+        amount: 24652500,
+        currency: 'INR',
+        receipt: 'rcpt_pinv_2026_8801',
+        status: 'created',
+        key_id: 'rzp_test_WildernessDojo2026',
+        merchant_vpa: 'wildernessdojo@razorpay',
+        upi_qr_payload: 'upi://pay?pa=wildernessdojo@razorpay&pn=Wilderness+Dojo+Sanctuary&am=2465.25&cu=INR&tr=order_Nx8819QvM209&tn=Invoice+PINV-2026-8801',
+        upi_deep_links: {
+          gpay: 'tez://upi/pay?pa=wildernessdojo@razorpay...',
+          phonepe: 'phonepe://pay?pa=wildernessdojo@razorpay...',
+          paytm: 'paytmmp://pay?pa=wildernessdojo@razorpay...',
+          bhim: 'upi://pay?pa=wildernessdojo@razorpay...'
+        }
+      }
+    }
+  },
+  {
+    id: 'ep-razorpay-verify-payment',
+    category: 'Payment Gateway',
+    method: 'POST',
+    path: '/api/razorpay/verify-payment',
+    description: 'Verify HMAC-SHA256 signature for Razorpay UPI order and update invoice to PAID',
+    requiresAuth: false,
+    sampleRequestBody: {
+      razorpay_order_id: 'order_Nx8819QvM209',
+      razorpay_payment_id: 'pay_N8zL29qK10M4aX',
+      razorpay_signature: 'e9b27810df66b1a9e32049d50123efca77291a0b381048b291c9901aa84b1028',
+      purchaseInvoiceId: 'pinv-8801',
+      upiVpa: 'm.vance@oksbi',
+      paymentMethod: 'UPI'
+    },
+    sampleResponse: {
+      success: true,
+      verified: true,
+      paymentId: 'pay_N8zL29qK10M4aX',
+      orderId: 'order_Nx8819QvM209',
+      receiptNumber: 'RZP-REC-2026-8801',
+      upiTransactionRef: 'UPI/428910284719/RZP',
+      settlementStatus: 'CAPTURED',
+      gatewayResponse: 'RZP_PAYMENT_CAPTURED_AND_SETTLED_WITH_UPI_AUTOREMIT'
+    }
+  },
+  {
+    id: 'ep-razorpay-upi-intent',
+    category: 'Payment Gateway',
+    method: 'POST',
+    path: '/api/razorpay/upi-intent',
+    description: 'Dispatch instant push collect request to customer UPI VPA (GPay, PhonePe, Paytm, BHIM)',
+    requiresAuth: false,
+    sampleRequestBody: {
+      vpa: 'bheemaiah@oksbi',
+      amount: 45000,
+      purchaseInvoiceId: 'pinv-8802'
+    },
+    sampleResponse: {
+      success: true,
+      collectRequestId: 'req_8f10ab78d104',
+      vpa: 'bheemaiah@oksbi',
+      status: 'COLLECT_REQUEST_SENT',
+      expiresInSeconds: 300,
+      message: 'UPI Payment request of ₹45,000 sent to bheemaiah@oksbi.'
+    }
+  },
+  {
     id: 'ep-wp-sync',
     category: 'WordPress & Webhooks',
     method: 'GET',

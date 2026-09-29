@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   ShieldCheck, Activity, Globe, Sparkles, RefreshCw, Layers, 
-  UserCheck, Shield, Key, LogOut, Lock, User, CreditCard, Database, Terminal
+  UserCheck, Shield, Key, LogOut, Lock, User, CreditCard, Database, Terminal, ShoppingBag
 } from 'lucide-react';
 import { WordPressSyncStatus, NavigationTab } from '../types';
 import { useIAMAuth } from '../context/IAMAuthContext';
@@ -14,6 +14,7 @@ interface HeaderProps {
   isSyncing: boolean;
   totalInvoicesCount: number;
   totalRecordsCount: number;
+  totalPurchaseInvoicesCount?: number;
   onOpenIAMSecurityModal?: () => void;
 }
 
@@ -25,6 +26,7 @@ export const Header: React.FC<HeaderProps> = ({
   isSyncing,
   totalInvoicesCount,
   totalRecordsCount,
+  totalPurchaseInvoicesCount,
   onOpenIAMSecurityModal
 }) => {
   const { user, logout } = useIAMAuth();
@@ -185,6 +187,18 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <Layers className="w-3.5 h-3.5" />
               <span>Invoices ({totalInvoicesCount})</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('purchase-invoices')}
+              className={`px-3 py-1.5 rounded-xl flex items-center space-x-1.5 transition duration-200 shrink-0 ${
+                activeTab === 'purchase-invoices'
+                  ? 'bg-gradient-to-r from-emerald-500/90 to-teal-500/90 text-slate-950 font-bold shadow-md shadow-emerald-500/20 border border-white/20'
+                  : 'text-slate-300 hover:text-white hover:bg-white/[0.08]'
+              }`}
+            >
+              <ShoppingBag className="w-3.5 h-3.5" />
+              <span>Purchase & UPI {totalPurchaseInvoicesCount !== undefined ? `(${totalPurchaseInvoicesCount})` : ''}</span>
             </button>
 
             <button

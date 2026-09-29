@@ -102,9 +102,14 @@ export interface PaymentTransaction {
   id: string;
   transactionHash: string;
   amountPaid: number;
-  paymentMethod: 'HSA_FSA_CARD' | 'CREDIT_DEBIT' | 'INSURANCE_DIRECT_EFT' | 'BANK_ACH';
+  paymentMethod: 'HSA_FSA_CARD' | 'CREDIT_DEBIT' | 'INSURANCE_DIRECT_EFT' | 'BANK_ACH' | 'RAZORPAY_UPI';
   cardLast4?: string;
   cardBrand?: string;
+  upiVpa?: string;
+  upiTransactionRef?: string;
+  razorpayOrderId?: string;
+  razorpayPaymentId?: string;
+  razorpaySignature?: string;
   timestamp: string;
   status: 'SUCCESS' | 'PENDING' | 'FAILED';
   authCode: string;
@@ -379,10 +384,71 @@ export type NavigationTab =
   | 'patient-portal' 
   | 'patient-payment' 
   | 'invoices' 
+  | 'purchase-invoices'
   | 'payers' 
   | 'json-database' 
   | 'rest-api' 
   | 'wordpress';
+
+export interface PurchaseInvoiceItem {
+  id: string;
+  description: string;
+  category: 'Retreat Package' | 'Martial Equipment' | 'Herbal & Nutrition' | 'Bio-Telemetry Sensor' | 'Clinical Out-of-Pocket' | 'Membership';
+  quantity: number;
+  unitPrice: number;
+  taxPercent: number; // e.g. 18 for 18% GST or 0
+  total: number;
+}
+
+export interface PurchaseInvoice {
+  id: string;
+  invoiceNumber: string; // e.g. "PINV-2026-8801"
+  customerName: string;
+  customerEmail: string;
+  customerPhone?: string;
+  billingAddress: string;
+  issueDate: string;
+  dueDate: string;
+  currency: 'INR' | 'USD';
+  exchangeRateToInr: number; // e.g. 86.5
+  lineItems: PurchaseInvoiceItem[];
+  subtotal: number;
+  taxAmount: number;
+  discount: number;
+  totalAmount: number;
+  status: 'DRAFT' | 'ISSUED' | 'PAYMENT_PENDING' | 'PAID' | 'CANCELLED';
+  paymentGateway?: 'RAZORPAY_UPI' | 'RAZORPAY_CARD' | 'NET_BANKING' | 'MANUAL';
+  razorpayOrderId?: string;
+  razorpayPaymentId?: string;
+  razorpaySignature?: string;
+  upiVpa?: string;
+  upiTransactionRef?: string;
+  paidAt?: string;
+  receiptNumber?: string;
+  linkedEncounterRecordId?: string;
+  notes?: string;
+}
+
+export interface RazorpayOrderDetails {
+  id: string;
+  entity: string;
+  amount: number; // in smallest unit (paise/cents)
+  amount_paid: number;
+  amount_due: number;
+  currency: string;
+  receipt: string;
+  status: 'created' | 'attempted' | 'paid';
+  key_id: string;
+  upi_qr_payload: string;
+  upi_deep_links: {
+    gpay: string;
+    phonepe: string;
+    paytm: string;
+    bhim: string;
+    cred: string;
+    generic: string;
+  };
+}
 
 export interface AppJSONDatabase {
   schemaVersion: string;
