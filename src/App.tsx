@@ -14,6 +14,7 @@ import { RestApiWebhookPage } from './components/RestApiWebhookPage';
 import { IAMSecurityGate } from './components/IAMSecurityGate';
 import { IAMSecurityManagerModal } from './components/IAMSecurityManagerModal';
 import { IAMAuthProvider, useIAMAuth } from './context/IAMAuthContext';
+import { Globe, Award, ShieldCheck, Mail, UserCheck } from 'lucide-react';
 import { 
   SAMPLE_WELLNESS_RECORDS, 
   INSURANCE_PAYERS, 
@@ -418,6 +419,50 @@ function AuthenticatedApp() {
           />
         )}
       </main>
+
+      {/* Authorship & Project Attribution Footer */}
+      <footer className="mt-12 border-t border-white/10 bg-[#081816]/90 backdrop-blur-xl text-slate-300 py-6 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
+          <div className="flex items-center space-x-3 text-center md:text-left">
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+              <UserCheck className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="font-semibold text-white flex items-center gap-1.5 justify-center md:justify-start">
+                <span>Dr. Bheemaiah Anil K</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-400/15 text-emerald-300 border border-emerald-400/30 font-medium">
+                  Director, Wilderness Dojo
+                </span>
+              </p>
+              <p className="text-[11px] text-slate-400">
+                XPRIZE Devpost Hackathon &bull; Autonomous Medical AI Billing Engine
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center flex-wrap justify-center gap-4 text-slate-400 text-[11px]">
+            <a
+              href="https://wildernessdojo.home.blog"
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center space-x-1.5 hover:text-emerald-300 transition"
+            >
+              <Globe className="w-3.5 h-3.5 text-teal-400" />
+              <span>wildernessdojo.home.blog</span>
+            </a>
+
+            <div className="flex items-center space-x-1.5 text-slate-400">
+              <Mail className="w-3.5 h-3.5 text-emerald-400" />
+              <span className="font-mono text-[10px]">duru909mede@post.wordpress.com</span>
+            </div>
+
+            <div className="flex items-center space-x-1.5 text-slate-400">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+              <span>NIST SP 800-207 Zero-Trust</span>
+            </div>
+          </div>
+        </div>
+      </footer>
 
       {/* Payment Processing Modal */}
       {paymentModalInvoice && (

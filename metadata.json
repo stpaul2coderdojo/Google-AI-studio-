@@ -1,6 +1,6 @@
 {
   "name": "Wilderness Dojo Antigravity Billing AI",
-  "description": "Production-ready Zero-Trust IAM Autonomous Medical AI Billing and Invoicing Engine for the XPRIZE Devpost Hackathon. Features multi-role RBAC, NIST SP 800-207 continuous verification, Gemini clinical coding, real-time EDI 837P clearinghouse adjudication, instant HSA/FSA copay settlement, and wildernessdojo.home.blog ecosystem bridge with Post-by-Email publishing via duru909mede@post.wordpress.com.",
+  "description": "Production-ready Zero-Trust IAM Autonomous Medical AI Billing and Invoicing Engine for the XPRIZE Devpost Hackathon. Directed by Dr. Bheemaiah Anil K, Director, Wilderness Dojo. Features multi-role RBAC, NIST SP 800-207 continuous verification, Gemini clinical coding, real-time EDI 837P clearinghouse adjudication, instant HSA/FSA copay settlement, and wildernessdojo.home.blog ecosystem bridge with Post-by-Email publishing via duru909mede@post.wordpress.com.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

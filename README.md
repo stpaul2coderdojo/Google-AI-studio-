@@ -10,12 +10,15 @@
 [![WordPress Bridge](https://img.shields.io/badge/WordPress-wildernessdojo.home.blog-blue.svg)](https://wildernessdojo.home.blog)
 
 > **Autonomous Medical AI Billing, Invoicing, and WordPress Post-by-Email Ecosystem Gateway**  
-> Developed for the **XPRIZE Devpost Hackathon**. Combines Zero-Trust IAM continuous verification, Gemini clinical NLP extraction, real-time EDI 837P clearinghouse adjudication, instant HSA/FSA copay settlement, and a bi-directional bridge to [`wildernessdojo.home.blog`](https://wildernessdojo.home.blog) via Post-by-Email (`duru909mede@post.wordpress.com`).
+> Developed for the **XPRIZE Devpost Hackathon**.  
+> **Director & Lead Architect**: **Dr. Bheemaiah Anil K**, Director, Wilderness Dojo (`bheemaiah@alumni.iitm.ac.in`).  
+> Combines Zero-Trust IAM continuous verification, Gemini clinical NLP extraction, real-time EDI 837P clearinghouse adjudication, instant HSA/FSA copay settlement, and a bi-directional bridge to [`wildernessdojo.home.blog`](https://wildernessdojo.home.blog) via Post-by-Email (`duru909mede@post.wordpress.com`).
 
 ---
 
 ## Table of Contents
 
+- [Authorship & Project Leadership](#authorship--project-leadership)
 - [Overview](#overview)
 - [Key Features](#key-features)
 - [Architecture & Tech Stack](#architecture--tech-stack)
@@ -279,6 +282,18 @@ curl -X POST http://localhost:3000/api/wordpress/post-blog \
     "featuredCost": 280.00
   }'
 ```
+
+---
+
+## Authorship & Project Leadership
+
+- **Project Lead & Director**: **Dr. Bheemaiah Anil K**
+  - **Role**: Director, Wilderness Dojo
+  - **Contact**: `bheemaiah@alumni.iitm.ac.in`
+  - **Institution / Sanctuary**: Wilderness Dojo ([wildernessdojo.home.blog](https://wildernessdojo.home.blog))
+  - **Post-by-Email Integration Gateway**: `duru909mede@post.wordpress.com`
+  - **Competition**: XPRIZE Devpost Hackathon
+  - **System Vision**: Autonomous zero-trust clinical revenue cycle management uniting frontier AI intelligence (Gemini 2.5), EDI 837P clearinghouse automation, and decentralized somatic wellness practices.
 
 ---
 

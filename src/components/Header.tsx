@@ -39,16 +39,21 @@ export const Header: React.FC<HeaderProps> = ({
               <Sparkles className="w-5 h-5 text-white" />
             </div>
             <div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 flex-wrap gap-y-1">
                 <span className="font-bold text-base sm:text-lg tracking-tight text-white drop-shadow-sm">
                   Wilderness Dojo
                 </span>
                 <span className="text-[10px] sm:text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-400/15 text-emerald-300 font-semibold border border-emerald-400/30 backdrop-blur-md shadow-inner">
                   Antigravity AI Billing
                 </span>
+                <span className="text-[10px] px-2 py-0.5 rounded-md bg-teal-500/15 text-teal-300 font-medium border border-teal-500/30 hidden sm:inline-flex items-center gap-1">
+                  Director: Dr. Bheemaiah Anil K
+                </span>
               </div>
-              <p className="text-[11px] sm:text-xs text-slate-300/80">
-                Medical Wellness Invoicing & Real-Time Claims Engine
+              <p className="text-[11px] sm:text-xs text-slate-300/80 flex items-center gap-1.5 flex-wrap">
+                <span>Medical Wellness Invoicing & Real-Time Claims Engine</span>
+                <span className="text-slate-500 hidden sm:inline">&bull;</span>
+                <span className="text-emerald-300/90 font-medium sm:hidden">Dr. Bheemaiah Anil K, Director</span>
               </p>
             </div>
           </div>
