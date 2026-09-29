@@ -18,6 +18,27 @@ export interface MedicalCodeItem {
   isCovered?: boolean;
 }
 
+export interface Patient {
+  id: string; // e.g. "PT-8821"
+  name: string;
+  dob: string;
+  gender: 'Female' | 'Male' | 'Non-Binary' | 'Other';
+  contactEmail: string;
+  phone: string;
+  address: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  medicalHistoryNotes?: string;
+  knownAllergies?: string;
+  insuranceProviderId: string;
+  insurancePolicyNumber: string;
+  insuranceGroupNumber: string;
+  linkedWpMemberId?: string;
+  registeredDate: string;
+  preferredEncounterType?: string;
+  status: 'Active Member' | 'On Leave' | 'Completed Program';
+}
+
 export interface MedicalWellnessRecord {
   id: string;
   patientId: string;
@@ -46,6 +67,8 @@ export interface MedicalWellnessRecord {
   linkedWpPostId?: number;
   linkedWpMemberId?: string;
 }
+
+export type MedicalEncounterRecord = MedicalWellnessRecord;
 
 export interface InsuranceProvider {
   id: string;
@@ -168,20 +191,53 @@ export interface WordPressPost {
   date: string;
   link: string;
   excerpt: string;
+  content?: string;
   category: string;
+  tags?: string[];
+  status?: 'publish' | 'draft' | 'private';
   featuredSessionCost?: number;
   coveredUnderInsurance?: boolean;
+  publishedVia?: 'POST_BY_EMAIL' | 'REST_API' | 'DIRECT_SYNC';
+  postEmailGateway?: string;
+}
+
+export interface WordPressEmailPostPayload {
+  title: string;
+  content: string;
+  category: string;
+  tags?: string[];
+  status?: 'publish' | 'draft' | 'private';
+  slug?: string;
+  targetEmail: string; // e.g. duru909mede@post.wordpress.com
+  targetSite: string; // e.g. https://wildernessdojo.home.blog
+  featuredSessionCost?: number;
+  coveredUnderInsurance?: boolean;
+  linkedRecordId?: string;
+}
+
+export interface WordPressEmailPostResult {
+  success: boolean;
+  messageId: string;
+  transactionHash: string;
+  dispatchedTo: string;
+  targetSite: string;
+  post: WordPressPost;
+  emailSubject: string;
+  formattedBodyWithShortcodes: string;
+  timestamp: string;
+  mailtoUrl: string;
 }
 
 export interface WordPressSyncStatus {
   siteUrl: string;
+  postingEmailGateway: string; // duru909mede@post.wordpress.com
   isOnline: boolean;
   lastSyncTimestamp: string;
   syncedPostsCount: number;
   activeMemberSessions: number;
   apiLatencyMs: number;
   webhookEndpoint: string;
-  authMode: 'Application Password' | 'REST Open API' | 'JWT Bearer';
+  authMode: 'Application Password' | 'REST Open API' | 'JWT Bearer' | 'Post-by-Email Gateway';
 }
 
 export interface AntigravityAgentStep {
@@ -195,6 +251,38 @@ export interface AntigravityAgentStep {
   thoughtLog?: string;
 }
 
+export interface PatientAppointment {
+  id: string;
+  patientId: string;
+  patientName: string;
+  appointmentDate: string;
+  appointmentTime: string;
+  durationMinutes: number;
+  encounterType: 'Wilderness Somatic Therapy' | 'Martial Movement Rehab' | 'Forest Mindfulness & Stress Protocol' | 'Biometric Rehabilitation' | 'Physical Conditioning & Gait Training';
+  providerName: string;
+  providerSpecialty: string;
+  facilityName: string;
+  facilityAddress: string;
+  status: 'Scheduled' | 'Confirmed' | 'In Progress' | 'Completed' | 'Cancelled';
+  telehealthOrTrail: 'Alpine Trail Sanctuary' | 'Dojo Training Hall' | 'Shinrin-Yoku Forest' | 'Secure Telehealth';
+  preparationNotes: string;
+  insurancePreAuthorized: boolean;
+  estimatedCopay: number;
+}
+
+export interface LongitudinalBiometricDataPoint {
+  date: string;
+  encounterLabel: string;
+  hrvScore: number; // ms
+  heartRate: number; // bpm
+  mobilityScore: number; // 0-100
+  stressIndex: number; // 0-100 (lower is better)
+  spo2: number; // %
+  systolicBp: number;
+  diastolicBp: number;
+  painLevel: number; // 0-10
+}
+
 export interface AgentBillingExecutionResult {
   success: boolean;
   invoiceId: string;
@@ -206,3 +294,127 @@ export interface AgentBillingExecutionResult {
   wpSyncLog?: string;
   summaryText: string;
 }
+
+export type IAMRole = 
+  | 'SUPER_ADMIN' 
+  | 'CHIEF_MEDICAL_OFFICER' 
+  | 'BILLING_COMPLIANCE_OFFICER' 
+  | 'AUDIT_OFFICER';
+
+export type IAMPermission = 
+  | 'MANAGE_USERS' 
+  | 'AI_MODEL_TUNING' 
+  | 'VIEW_EHR' 
+  | 'EDIT_EHR' 
+  | 'ADJUDICATE_CLAIMS' 
+  | 'VIEW_INVOICES' 
+  | 'MANAGE_PAYERS' 
+  | 'SYNC_WORDPRESS' 
+  | 'EXPORT_AUDIT_LOGS' 
+  | 'PROCESS_PAYMENTS';
+
+export interface IAMUser {
+  id: string;
+  username: string;
+  email: string;
+  fullName: string;
+  role: IAMRole;
+  roleTitle: string;
+  permissions: IAMPermission[];
+  lastLogin: string;
+  createdAt: string;
+  active: boolean;
+  twoFactorEnabled?: boolean;
+}
+
+export interface AuthSession {
+  token: string;
+  user: IAMUser;
+  expiresAt: string;
+}
+
+export interface IAMLoginResponse {
+  success: boolean;
+  token?: string;
+  user?: IAMUser;
+  error?: string;
+  requiresTwoFactor?: boolean;
+}
+
+export interface IAMSecurityAuditEntry {
+  id: string;
+  timestamp: string;
+  action: 'LOGIN_SUCCESS' | 'LOGIN_FAILED' | 'LOGOUT' | 'PASSWORD_CHANGE' | 'USER_CREATED' | 'PERMISSION_GRANT' | 'RESTRICTED_ACCESS_ATTEMPT' | 'ZERO_TRUST_VERIFICATION';
+  username: string;
+  role: string;
+  ipAddress: string;
+  status: 'SUCCESS' | 'WARNING' | 'CRITICAL';
+  details: string;
+}
+
+export interface ZeroTrustMetrics {
+  totalVerifications: number;
+  activeSessionsCount: number;
+  leastPrivilegeEnforcementRate: number;
+  blockedIntrusions: number;
+  cryptographicHashChainStatus: 'HEALTHY_VERIFIED' | 'DEGRADED';
+  averageAuthLatencyMs: number;
+  zeroTrustGrade: 'A+' | 'A' | 'B';
+  lastVerificationTimestamp: string;
+}
+
+export interface XPrizeDemoStep {
+  id: number;
+  title: string;
+  subtitle: string;
+  description: string;
+  tabKey: 'records' | 'workbench' | 'invoices' | 'payers' | 'wordpress' | 'patient-portal' | 'patient-payment' | 'json-database' | 'rest-api';
+  badge: string;
+  details: string[];
+}
+
+export type NavigationTab = 
+  | 'workbench' 
+  | 'records' 
+  | 'patient-portal' 
+  | 'patient-payment' 
+  | 'invoices' 
+  | 'payers' 
+  | 'json-database' 
+  | 'rest-api' 
+  | 'wordpress';
+
+export interface AppJSONDatabase {
+  schemaVersion: string;
+  lastUpdated: string;
+  checksum: string;
+  collections: {
+    records: MedicalWellnessRecord[];
+    invoices: Invoice[];
+    payers: InsuranceProvider[];
+    posts: WordPressPost[];
+    securityLogs: IAMSecurityAuditEntry[];
+  };
+  metadata: {
+    totalRecords: number;
+    totalInvoices: number;
+    totalPayers: number;
+    environment: string;
+    linkedWordpressSite: string;
+  };
+}
+
+export interface RestApiEndpointSpec {
+  id: string;
+  category: 'IAM & Security' | 'Medical EHR Records' | 'AI CPT Billing' | 'Payment Gateway' | 'WordPress & Webhooks' | 'JSON Database';
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE';
+  path: string;
+  description: string;
+  requiresAuth: boolean;
+  requiredPermission?: IAMPermission;
+  requestHeaders?: Record<string, string>;
+  requestBodySchema?: any;
+  sampleRequestBody?: any;
+  sampleResponse: any;
+}
+

@@ -3,6 +3,7 @@ import {
   CreditCard, ShieldCheck, CheckCircle2, Lock, RefreshCw, 
   DollarSign, Sparkles, Receipt, ArrowRight, Building, Globe
 } from 'lucide-react';
+import { useIAMAuth } from '../context/IAMAuthContext';
 import { Invoice, PaymentTransaction } from '../types';
 
 interface RealtimePaymentModalProps {
@@ -16,6 +17,7 @@ export const RealtimePaymentModal: React.FC<RealtimePaymentModalProps> = ({
   onClose,
   onPaymentSuccess
 }) => {
+  const { apiFetch } = useIAMAuth();
   const [paymentMethod, setPaymentMethod] = useState<'HSA_FSA_CARD' | 'CREDIT_DEBIT' | 'INSURANCE_DIRECT_EFT' | 'BANK_ACH'>('HSA_FSA_CARD');
   const [cardNumber, setCardNumber] = useState('4912 8820 3910 4912');
   const [expiry, setExpiry] = useState('08/29');
@@ -31,7 +33,7 @@ export const RealtimePaymentModal: React.FC<RealtimePaymentModalProps> = ({
     setIsProcessing(true);
 
     try {
-      const res = await fetch('/api/payments/process', {
+      const res = await apiFetch('/api/payments/process', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -51,7 +53,7 @@ export const RealtimePaymentModal: React.FC<RealtimePaymentModalProps> = ({
       if (data.success && data.transaction) {
         setCompletedTx(data.transaction);
         // Also trigger WordPress webhook sync
-        await fetch('/api/wordpress/webhook', {
+        await apiFetch('/api/wordpress/webhook', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  wilderness-dojo-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wilderness-dojo-billing-ai
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - WORDPRESS_SITE_URL=${WORDPRESS_SITE_URL:-https://wildernessdojo.home.blog}
+      - WORDPRESS_POST_EMAIL=${WORDPRESS_POST_EMAIL:-duru909mede@post.wordpress.com}
+      - APP_URL=${APP_URL:-http://localhost:3000}
+    restart: unless-stopped

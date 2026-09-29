@@ -1,15 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
+import { XPrizeHackathonBar } from './components/XPrizeHackathonBar';
 import { AgenticWorkbench } from './components/AgenticWorkbench';
 import { MedicalWellnessRecords } from './components/MedicalWellnessRecords';
+import { PatientPortalSummary } from './components/PatientPortalSummary';
 import { InsurancePayersManager } from './components/InsurancePayersManager';
 import { InvoicesClaimsView } from './components/InvoicesClaimsView';
 import { RealtimePaymentModal } from './components/RealtimePaymentModal';
 import { WordPressBridgePanel } from './components/WordPressBridgePanel';
+import { PatientPaymentPage } from './components/PatientPaymentPage';
+import { JSONDatabasePage } from './components/JSONDatabasePage';
+import { RestApiWebhookPage } from './components/RestApiWebhookPage';
+import { IAMSecurityGate } from './components/IAMSecurityGate';
+import { IAMSecurityManagerModal } from './components/IAMSecurityManagerModal';
+import { IAMAuthProvider, useIAMAuth } from './context/IAMAuthContext';
 import { 
   SAMPLE_WELLNESS_RECORDS, 
   INSURANCE_PAYERS, 
-  INITIAL_WORDPRESS_POSTS 
+  INITIAL_WORDPRESS_POSTS,
+  INITIAL_PATIENTS
 } from './data/mockData';
 import { 
   MedicalWellnessRecord, 
@@ -19,11 +28,18 @@ import {
   WordPressSyncStatus,
   PaymentTransaction,
   AntigravityAgentStep,
-  InvoiceAuditEntry 
+  InvoiceAuditEntry,
+  NavigationTab,
+  Patient
 } from './types';
 
-export default function App() {
-  const [activeTab, setActiveTab] = useState<'workbench' | 'records' | 'invoices' | 'payers' | 'wordpress'>('workbench');
+function AuthenticatedApp() {
+  const { isAuthenticated, isLoading, apiFetch } = useIAMAuth();
+  const [isIAMModalOpen, setIsIAMModalOpen] = useState<boolean>(false);
+
+  const [activeTab, setActiveTab] = useState<NavigationTab>('workbench');
+  const [selectedPatientIdForPortal, setSelectedPatientIdForPortal] = useState<string>('PT-8821');
+  const [patients, setPatients] = useState<Patient[]>(INITIAL_PATIENTS);
   const [records, setRecords] = useState<MedicalWellnessRecord[]>(SAMPLE_WELLNESS_RECORDS);
   const [payers, setPayers] = useState<InsuranceProvider[]>(INSURANCE_PAYERS);
   const [wpPosts, setWpPosts] = useState<WordPressPost[]>(INITIAL_WORDPRESS_POSTS);
@@ -38,6 +54,9 @@ export default function App() {
     authMode: 'REST Open API'
   });
   const [isSyncingWp, setIsSyncingWp] = useState<boolean>(false);
+  const [selectedInvoiceDetail, setSelectedInvoiceDetail] = useState<Invoice | null>(null);
+  const [paymentModalInvoice, setPaymentModalInvoice] = useState<Invoice | null>(null);
+
 
   // Invoices list state (pre-populated with 2 realistic baseline claims)
   const [invoices, setInvoices] = useState<Invoice[]>([
@@ -124,14 +143,11 @@ export default function App() {
     }
   ]);
 
-  const [selectedInvoiceDetail, setSelectedInvoiceDetail] = useState<Invoice | null>(null);
-  const [paymentModalInvoice, setPaymentModalInvoice] = useState<Invoice | null>(null);
-
   // Sync with WordPress API
   const refreshWordPressSync = async () => {
     setIsSyncingWp(true);
     try {
-      const res = await fetch('/api/wordpress/sync');
+      const res = await apiFetch('/api/wordpress/sync');
       const data = await res.json();
       if (data.success) {
         setWpStatus({
@@ -156,13 +172,15 @@ export default function App() {
   };
 
   useEffect(() => {
-    refreshWordPressSync();
-  }, []);
+    if (isAuthenticated) {
+      refreshWordPressSync();
+    }
+  }, [isAuthenticated]);
 
   // Autonomous Antigravity Billing execution handler
   const handleExecuteBilling = async (record: MedicalWellnessRecord, payer: InsuranceProvider) => {
     try {
-      const res = await fetch('/api/ai/billing-agent', {
+      const res = await apiFetch('/api/ai/billing-agent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -236,6 +254,21 @@ export default function App() {
     }
   };
 
+  // Session check loading screen
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center space-y-3 text-slate-300">
+        <div className="w-8 h-8 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+        <div className="text-xs font-mono text-slate-400">Verifying IAM Security Credentials...</div>
+      </div>
+    );
+  }
+
+  // Lock entire app behind IAM Security Gate if not authenticated
+  if (!isAuthenticated) {
+    return <IAMSecurityGate />;
+  }
+
   return (
     <div className="min-h-screen bg-[#061110] text-slate-100 font-sans selection:bg-emerald-400 selection:text-slate-950 relative overflow-hidden">
       {/* Frosted Glass Ambient Lighting Effects */}
@@ -247,6 +280,12 @@ export default function App() {
         <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.03)_1px,transparent_1px)] [background-size:24px_24px] opacity-40 pointer-events-none" />
       </div>
 
+      {/* XPRIZE Hackathon Status Banner & Interactive Judge Tour */}
+      <XPrizeHackathonBar
+        currentTab={activeTab}
+        onTabChange={(tab) => setActiveTab(tab as any)}
+      />
+
       {/* Navigation Header */}
       <Header
         activeTab={activeTab}
@@ -256,6 +295,7 @@ export default function App() {
         isSyncing={isSyncingWp}
         totalInvoicesCount={invoices.length}
         totalRecordsCount={records.length}
+        onOpenIAMSecurityModal={() => setIsIAMModalOpen(true)}
       />
 
       {/* Main Container */}
@@ -277,11 +317,48 @@ export default function App() {
           <MedicalWellnessRecords
             records={records}
             payers={payers}
+            patients={patients}
             onSelectRecordForBilling={(rec) => {
               setActiveTab('workbench');
             }}
             onAddNewRecord={(newRec) => {
               setRecords(prev => [newRec, ...prev]);
+            }}
+            onAddNewPatient={(newPatient) => {
+              setPatients(prev => [newPatient, ...prev]);
+            }}
+            onViewPatientPortal={(patientId) => {
+              setSelectedPatientIdForPortal(patientId);
+              setActiveTab('patient-portal');
+            }}
+          />
+        )}
+
+        {activeTab === 'patient-payment' && (
+          <PatientPaymentPage
+            invoices={invoices}
+            onOpenPaymentModal={(inv) => setPaymentModalInvoice(inv)}
+            onSelectInvoiceDetail={(inv) => {
+              setSelectedInvoiceDetail(inv);
+              setActiveTab('invoices');
+            }}
+            onPaymentSuccess={handlePaymentSuccess}
+          />
+        )}
+
+        {activeTab === 'patient-portal' && (
+          <PatientPortalSummary
+            records={records}
+            payers={payers}
+            invoices={invoices}
+            selectedPatientId={selectedPatientIdForPortal}
+            onSelectInvoice={(inv) => {
+              setSelectedInvoiceDetail(inv);
+              setActiveTab('invoices');
+            }}
+            onOpenPayment={(inv) => setPaymentModalInvoice(inv)}
+            onNavigateToWorkbenchWithRecord={(rec) => {
+              setActiveTab('workbench');
             }}
           />
         )}
@@ -289,9 +366,14 @@ export default function App() {
         {activeTab === 'invoices' && (
           <InvoicesClaimsView
             invoices={invoices}
+            records={records}
+            payers={payers}
             selectedInvoice={selectedInvoiceDetail}
             onSelectInvoice={setSelectedInvoiceDetail}
             onOpenPayment={(inv) => setPaymentModalInvoice(inv)}
+            onAddNewInvoice={(newInv) => {
+              setInvoices(prev => [newInv, ...prev]);
+            }}
           />
         )}
 
@@ -301,15 +383,38 @@ export default function App() {
             onSelectPayer={(payer) => {
               setActiveTab('workbench');
             }}
+            onAddNewPayer={(newPayer) => {
+              setPayers(prev => [newPayer, ...prev]);
+            }}
           />
+        )}
+
+        {activeTab === 'json-database' && (
+          <JSONDatabasePage
+            records={records}
+            invoices={invoices}
+            payers={payers}
+            posts={wpPosts}
+            onUpdateRecords={(updated) => setRecords(updated)}
+            onUpdateInvoices={(updated) => setInvoices(updated)}
+            onUpdatePayers={(updated) => setPayers(updated)}
+          />
+        )}
+
+        {activeTab === 'rest-api' && (
+          <RestApiWebhookPage />
         )}
 
         {activeTab === 'wordpress' && (
           <WordPressBridgePanel
             wpStatus={wpStatus}
             posts={wpPosts}
+            records={records}
             onRefreshSync={refreshWordPressSync}
             isSyncing={isSyncingWp}
+            onAddNewPost={(newPost) => {
+              setWpPosts(prev => [newPost, ...prev.filter(p => p.id !== newPost.id)]);
+            }}
           />
         )}
       </main>
@@ -322,6 +427,21 @@ export default function App() {
           onPaymentSuccess={handlePaymentSuccess}
         />
       )}
+
+      {/* IAM Security & Access Control Modal */}
+      <IAMSecurityManagerModal
+        isOpen={isIAMModalOpen}
+        onClose={() => setIsIAMModalOpen(false)}
+      />
     </div>
   );
 }
+
+export default function App() {
+  return (
+    <IAMAuthProvider>
+      <AuthenticatedApp />
+    </IAMAuthProvider>
+  );
+}
+

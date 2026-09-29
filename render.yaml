@@ -1,0 +1,22 @@
+# Render Blueprint Specification
+# Docs: https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: wilderness-dojo-billing-ai
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: WORDPRESS_SITE_URL
+        value: https://wildernessdojo.home.blog
+      - key: WORDPRESS_POST_EMAIL
+        value: duru909mede@post.wordpress.com
+      - key: APP_URL
+        fromHost: true
