@@ -198,7 +198,7 @@ export const Header: React.FC<HeaderProps> = ({
               }`}
             >
               <ShoppingBag className="w-3.5 h-3.5" />
-              <span>Purchase & UPI {totalPurchaseInvoicesCount !== undefined ? `(${totalPurchaseInvoicesCount})` : ''}</span>
+              <span>Purchase Invoices {totalPurchaseInvoicesCount !== undefined ? `(${totalPurchaseInvoicesCount})` : ''}</span>
             </button>
 
             <button

@@ -19,4 +19,4 @@ services:
       - key: WORDPRESS_POST_EMAIL
         value: duru909mede@post.wordpress.com
       - key: APP_URL
-        fromHost: true
+        value: https://wilderness-dojo-billing-ai.onrender.com

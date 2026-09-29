@@ -19,7 +19,7 @@ export const RazorpayUPIModal: React.FC<RazorpayUPIModalProps> = ({
   onPaymentSuccess
 }) => {
   const { apiFetch } = useIAMAuth();
-  const [activeMethod, setActiveMethod] = useState<'UPI_QR' | 'UPI_VPA' | 'CARD' | 'NETBANKING'>('UPI_QR');
+  const [activeMethod, setActiveMethod] = useState<'UPI_QR' | 'UPI_VPA' | 'CARD' | 'NETBANKING'>('CARD');
   
   // Order state
   const [orderDetails, setOrderDetails] = useState<RazorpayOrderDetails | null>(null);
@@ -117,6 +117,12 @@ export const RazorpayUPIModal: React.FC<RazorpayUPIModalProps> = ({
 
   // Verify Payment Handler
   const handleVerifyPayment = async (methodUsed: string, vpaUsed?: string) => {
+    if (methodUsed.startsWith('UPI')) {
+      alert('UPI payments have been deprecated and disabled. Please select Credit/Debit Card or NetBanking.');
+      setActiveMethod('CARD');
+      return;
+    }
+
     setIsProcessing(true);
     try {
       const orderId = orderDetails?.id || `order_${Date.now()}`;
@@ -129,7 +135,6 @@ export const RazorpayUPIModal: React.FC<RazorpayUPIModalProps> = ({
           razorpay_order_id: orderId,
           razorpay_payment_id: paymentId,
           purchaseInvoiceId: invoice.id,
-          upiVpa: vpaUsed || (activeMethod === 'UPI_VPA' ? upiVpa : 'customer@razorpay'),
           paymentMethod: methodUsed
         })
       });
@@ -138,6 +143,8 @@ export const RazorpayUPIModal: React.FC<RazorpayUPIModalProps> = ({
       if (data.success) {
         setCompletedPayment(data);
         onPaymentSuccess(invoice.id, data);
+      } else {
+        alert(data.error || 'Payment verification failed.');
       }
     } catch (err) {
       console.error('Payment verification failed:', err);
@@ -146,36 +153,11 @@ export const RazorpayUPIModal: React.FC<RazorpayUPIModalProps> = ({
     }
   };
 
-  // Direct VPA Collect Request
+  // Direct VPA Collect Request (DEPRECATED)
   const handleSendVpaRequest = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!upiVpa || !upiVpa.includes('@')) {
-      alert('Please enter a valid UPI ID (e.g. yourname@oksbi or mobile@upi)');
-      return;
-    }
-
-    setIsProcessing(true);
-    try {
-      const res = await apiFetch('/api/razorpay/upi-intent', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          vpa: upiVpa,
-          amount: amountInr,
-          purchaseInvoiceId: invoice.id
-        })
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        setIsVpaRequested(true);
-        setVpaMessage(data.message);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsProcessing(false);
-    }
+    alert('UPI payments and VPA collect requests have been deprecated and disabled. Please use Credit/Debit Card or NetBanking.');
+    setActiveMethod('CARD');
   };
 
   const copyUpiPayload = () => {
@@ -199,8 +181,8 @@ export const RazorpayUPIModal: React.FC<RazorpayUPIModalProps> = ({
             <div>
               <div className="flex items-center space-x-2">
                 <h3 className="font-bold text-white text-base">Razorpay Smart Gateway</h3>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono font-medium border border-emerald-500/30">
-                  UPI 2.0 Real-Time
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono font-medium border border-amber-500/30">
+                  UPI Deprecated &bull; Cards Active
                 </span>
               </div>
               <p className="text-xs text-slate-400">
@@ -242,32 +224,6 @@ export const RazorpayUPIModal: React.FC<RazorpayUPIModalProps> = ({
             <div className="grid grid-cols-4 gap-1.5 p-1 rounded-2xl bg-white/[0.04] border border-white/10 text-xs">
               <button
                 type="button"
-                onClick={() => setActiveMethod('UPI_QR')}
-                className={`py-2 px-1 rounded-xl font-medium transition flex flex-col items-center justify-center space-y-1 ${
-                  activeMethod === 'UPI_QR'
-                    ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-bold shadow-md shadow-emerald-500/20'
-                    : 'text-slate-300 hover:text-white hover:bg-white/[0.06]'
-                }`}
-              >
-                <QrCode className="w-4 h-4" />
-                <span className="text-[11px]">UPI QR</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveMethod('UPI_VPA')}
-                className={`py-2 px-1 rounded-xl font-medium transition flex flex-col items-center justify-center space-y-1 ${
-                  activeMethod === 'UPI_VPA'
-                    ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-bold shadow-md shadow-emerald-500/20'
-                    : 'text-slate-300 hover:text-white hover:bg-white/[0.06]'
-                }`}
-              >
-                <Smartphone className="w-4 h-4" />
-                <span className="text-[11px]">UPI ID / VPA</span>
-              </button>
-
-              <button
-                type="button"
                 onClick={() => setActiveMethod('CARD')}
                 className={`py-2 px-1 rounded-xl font-medium transition flex flex-col items-center justify-center space-y-1 ${
                   activeMethod === 'CARD'
@@ -276,7 +232,7 @@ export const RazorpayUPIModal: React.FC<RazorpayUPIModalProps> = ({
                 }`}
               >
                 <CreditCard className="w-4 h-4" />
-                <span className="text-[11px]">Cards</span>
+                <span className="text-[11px]">Cards (Active)</span>
               </button>
 
               <button
@@ -291,276 +247,178 @@ export const RazorpayUPIModal: React.FC<RazorpayUPIModalProps> = ({
                 <Building2 className="w-4 h-4" />
                 <span className="text-[11px]">Netbanking</span>
               </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveMethod('UPI_QR')}
+                className={`py-2 px-1 rounded-xl font-medium transition flex flex-col items-center justify-center space-y-1 ${
+                  activeMethod === 'UPI_QR'
+                    ? 'bg-amber-500/20 border border-amber-500/40 text-amber-300 font-bold'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.04]'
+                }`}
+              >
+                <div className="flex items-center space-x-1">
+                  <QrCode className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="text-[8px] px-1 py-0.5 rounded bg-amber-500/30 text-amber-300 font-mono font-bold">DEP</span>
+                </div>
+                <span className="text-[10px] line-through opacity-75">UPI QR</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveMethod('UPI_VPA')}
+                className={`py-2 px-1 rounded-xl font-medium transition flex flex-col items-center justify-center space-y-1 ${
+                  activeMethod === 'UPI_VPA'
+                    ? 'bg-amber-500/20 border border-amber-500/40 text-amber-300 font-bold'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.04]'
+                }`}
+              >
+                <div className="flex items-center space-x-1">
+                  <Smartphone className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="text-[8px] px-1 py-0.5 rounded bg-amber-500/30 text-amber-300 font-mono font-bold">DEP</span>
+                </div>
+                <span className="text-[10px] line-through opacity-75">UPI VPA</span>
+              </button>
             </div>
 
-            {/* TAB 1: UPI QR CODE */}
+            {/* TAB 1: UPI QR CODE (DEPRECATED) */}
             {activeMethod === 'UPI_QR' && (
               <div className="flex flex-col items-center space-y-4">
-                <div className="text-center space-y-1">
-                  <p className="text-sm font-semibold text-white">Scan with Any UPI App</p>
-                  <p className="text-xs text-slate-400">Google Pay, PhonePe, Paytm, BHIM, Cred, or any banking app</p>
+                {/* Prominent Deprecation Banner */}
+                <div className="w-full p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs space-y-2">
+                  <div className="flex items-center space-x-2 text-amber-400 font-bold">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>UPI Payment Channel Deprecated & Disabled</span>
+                  </div>
+                  <p className="text-slate-300 text-[11px] leading-relaxed">
+                    Transactions via UPI QR Code and deep links have been officially deprecated and deactivated. Initiation of new UPI payments is permanently disabled. Please use Credit/Debit Card or NetBanking.
+                  </p>
+                  <div className="pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setActiveMethod('CARD')}
+                      className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 text-xs font-bold inline-flex items-center space-x-1.5 transition shadow-sm"
+                    >
+                      <span>Switch to Credit / Debit Card</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
 
-                {/* QR Code Container */}
-                <div className="relative p-4 rounded-3xl bg-white border-4 border-emerald-500/30 shadow-2xl flex flex-col items-center">
-                  {isLoadingOrder ? (
-                    <div className="w-52 h-52 flex flex-col items-center justify-center space-y-2 text-slate-800">
-                      <RefreshCw className="w-8 h-8 animate-spin text-emerald-600" />
-                      <span className="text-xs font-medium">Generating UPI QR...</span>
-                    </div>
-                  ) : (
-                    <div className="relative">
-                      {/* Stylized high contrast QR Representation */}
-                      <svg className="w-52 h-52 text-slate-950" viewBox="0 0 100 100" fill="currentColor">
-                        {/* Corner Targets */}
-                        <rect x="5" y="5" width="24" height="24" rx="3" fill="#0f172a" />
-                        <rect x="8" y="8" width="18" height="18" fill="white" />
-                        <rect x="11" y="11" width="12" height="12" fill="#059669" />
+                <div className="text-center space-y-0.5 opacity-60">
+                  <p className="text-xs font-semibold text-slate-400 line-through">Scan with Any UPI App</p>
+                  <p className="text-[11px] text-slate-500">Google Pay, PhonePe, Paytm, BHIM &bull; Channel Inactive</p>
+                </div>
 
-                        <rect x="71" y="5" width="24" height="24" rx="3" fill="#0f172a" />
-                        <rect x="74" y="8" width="18" height="18" fill="white" />
-                        <rect x="77" y="11" width="12" height="12" fill="#059669" />
+                {/* QR Code Container - Grayscale with Deprecated Overlay */}
+                <div className="relative p-4 rounded-3xl bg-white/70 border-4 border-slate-700 shadow-2xl flex flex-col items-center opacity-40 grayscale pointer-events-none">
+                  <div className="relative">
+                    {/* Stylized QR Representation */}
+                    <svg className="w-48 h-48 text-slate-950" viewBox="0 0 100 100" fill="currentColor">
+                      <rect x="5" y="5" width="24" height="24" rx="3" fill="#0f172a" />
+                      <rect x="8" y="8" width="18" height="18" fill="white" />
+                      <rect x="11" y="11" width="12" height="12" fill="#64748b" />
 
-                        <rect x="5" y="71" width="24" height="24" rx="3" fill="#0f172a" />
-                        <rect x="8" y="74" width="18" height="18" fill="white" />
-                        <rect x="11" y="77" width="12" height="12" fill="#059669" />
+                      <rect x="71" y="5" width="24" height="24" rx="3" fill="#0f172a" />
+                      <rect x="74" y="8" width="18" height="18" fill="white" />
+                      <rect x="77" y="11" width="12" height="12" fill="#64748b" />
 
-                        {/* Dense Matrix Data Simulation */}
-                        <circle cx="34" cy="10" r="2.5" />
-                        <circle cx="42" cy="10" r="2.5" />
-                        <circle cx="50" cy="10" r="2.5" />
-                        <circle cx="58" cy="10" r="2.5" />
-                        <circle cx="66" cy="10" r="2.5" />
-                        
-                        <circle cx="34" cy="18" r="2.5" />
-                        <circle cx="46" cy="18" r="2.5" />
-                        <circle cx="54" cy="18" r="2.5" />
-                        <circle cx="62" cy="18" r="2.5" />
+                      <rect x="5" y="71" width="24" height="24" rx="3" fill="#0f172a" />
+                      <rect x="8" y="74" width="18" height="18" fill="white" />
+                      <rect x="11" y="77" width="12" height="12" fill="#64748b" />
 
-                        <circle cx="10" cy="34" r="2.5" />
-                        <circle cx="18" cy="34" r="2.5" />
-                        <circle cx="26" cy="34" r="2.5" />
-                        <circle cx="34" cy="34" r="2.5" />
-                        <circle cx="42" cy="34" r="2.5" />
-                        <circle cx="50" cy="34" r="2.5" />
-                        <circle cx="58" cy="34" r="2.5" />
-                        <circle cx="66" cy="34" r="2.5" />
-                        <circle cx="74" cy="34" r="2.5" />
-                        <circle cx="82" cy="34" r="2.5" />
-                        <circle cx="90" cy="34" r="2.5" />
-
-                        <circle cx="10" cy="42" r="2.5" />
-                        <circle cx="22" cy="42" r="2.5" />
-                        <circle cx="38" cy="42" r="2.5" />
-                        <circle cx="46" cy="42" r="2.5" />
-                        <circle cx="58" cy="42" r="2.5" />
-                        <circle cx="78" cy="42" r="2.5" />
-                        <circle cx="90" cy="42" r="2.5" />
-
-                        {/* Center UPI Logo Shield */}
-                        <rect x="36" y="36" width="28" height="28" rx="6" fill="#0f172a" />
-                        <text x="50" y="54" fill="#34d399" fontSize="9" fontWeight="bold" textAnchor="middle" fontFamily="sans-serif">UPI</text>
-
-                        <circle cx="10" cy="50" r="2.5" />
-                        <circle cx="22" cy="50" r="2.5" />
-                        <circle cx="78" cy="50" r="2.5" />
-                        <circle cx="90" cy="50" r="2.5" />
-
-                        <circle cx="10" cy="58" r="2.5" />
-                        <circle cx="18" cy="58" r="2.5" />
-                        <circle cx="26" cy="58" r="2.5" />
-                        <circle cx="34" cy="58" r="2.5" />
-                        <circle cx="66" cy="58" r="2.5" />
-                        <circle cx="74" cy="58" r="2.5" />
-                        <circle cx="82" cy="58" r="2.5" />
-
-                        <circle cx="34" cy="66" r="2.5" />
-                        <circle cx="42" cy="66" r="2.5" />
-                        <circle cx="50" cy="66" r="2.5" />
-                        <circle cx="58" cy="66" r="2.5" />
-                        <circle cx="70" cy="66" r="2.5" />
-                        <circle cx="78" cy="66" r="2.5" />
-                        <circle cx="86" cy="66" r="2.5" />
-
-                        <circle cx="34" cy="74" r="2.5" />
-                        <circle cx="46" cy="74" r="2.5" />
-                        <circle cx="54" cy="74" r="2.5" />
-                        <circle cx="62" cy="74" r="2.5" />
-                        <circle cx="74" cy="74" r="2.5" />
-                        <circle cx="86" cy="74" r="2.5" />
-
-                        <circle cx="34" cy="82" r="2.5" />
-                        <circle cx="42" cy="82" r="2.5" />
-                        <circle cx="58" cy="82" r="2.5" />
-                        <circle cx="66" cy="82" r="2.5" />
-                        <circle cx="78" cy="82" r="2.5" />
-                        <circle cx="90" cy="82" r="2.5" />
-                      </svg>
+                      <circle cx="34" cy="10" r="2.5" />
+                      <circle cx="42" cy="10" r="2.5" />
+                      <circle cx="50" cy="10" r="2.5" />
+                      <circle cx="58" cy="10" r="2.5" />
+                      <circle cx="66" cy="10" r="2.5" />
                       
-                      <div className="absolute inset-x-0 -bottom-3 text-center">
-                        <span className="text-[10px] font-mono font-bold bg-slate-900 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/30">
-                          wildernessdojo@razorpay
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                      <circle cx="34" cy="18" r="2.5" />
+                      <circle cx="46" cy="18" r="2.5" />
+                      <circle cx="54" cy="18" r="2.5" />
+                      <circle cx="62" cy="18" r="2.5" />
 
-                {/* Expiry countdown and copy link */}
-                <div className="flex items-center space-x-3 text-xs text-slate-400">
-                  <div className="flex items-center space-x-1 font-mono">
-                    <Clock className="w-3.5 h-3.5 text-amber-400" />
-                    <span>Expires in: <strong className="text-amber-300">{timeFormatted}</strong></span>
-                  </div>
-                  <span>&bull;</span>
-                  <button
-                    onClick={copyUpiPayload}
-                    className="flex items-center space-x-1 text-emerald-400 hover:text-emerald-300 font-medium transition"
-                  >
-                    {copiedLink ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                    <span>{copiedLink ? 'Copied URI' : 'Copy UPI Link'}</span>
-                  </button>
-                </div>
+                      <circle cx="10" cy="34" r="2.5" />
+                      <circle cx="18" cy="34" r="2.5" />
+                      <circle cx="26" cy="34" r="2.5" />
+                      <circle cx="34" cy="34" r="2.5" />
+                      <circle cx="42" cy="34" r="2.5" />
+                      <circle cx="50" cy="34" r="2.5" />
+                      <circle cx="58" cy="34" r="2.5" />
+                      <circle cx="66" cy="34" r="2.5" />
+                      <circle cx="74" cy="34" r="2.5" />
+                      <circle cx="82" cy="34" r="2.5" />
+                      <circle cx="90" cy="34" r="2.5" />
 
-                {/* Popular UPI Apps Quick Launch */}
-                <div className="w-full pt-2 border-t border-white/10 space-y-2">
-                  <p className="text-[11px] text-slate-400 text-center font-medium">Or pay directly using installed UPI App:</p>
-                  <div className="grid grid-cols-5 gap-2 text-center text-[10px]">
-                    <div className="p-2 rounded-xl bg-white/[0.04] border border-white/5 hover:border-emerald-500/30 transition">
-                      <span className="block font-bold text-white">GPay</span>
-                      <span className="text-[9px] text-emerald-400 font-mono">Google</span>
-                    </div>
-                    <div className="p-2 rounded-xl bg-white/[0.04] border border-white/5 hover:border-emerald-500/30 transition">
-                      <span className="block font-bold text-white">PhonePe</span>
-                      <span className="text-[9px] text-purple-400 font-mono">YesBank</span>
-                    </div>
-                    <div className="p-2 rounded-xl bg-white/[0.04] border border-white/5 hover:border-emerald-500/30 transition">
-                      <span className="block font-bold text-white">Paytm</span>
-                      <span className="text-[9px] text-sky-400 font-mono">UPI</span>
-                    </div>
-                    <div className="p-2 rounded-xl bg-white/[0.04] border border-white/5 hover:border-emerald-500/30 transition">
-                      <span className="block font-bold text-white">BHIM</span>
-                      <span className="text-[9px] text-amber-400 font-mono">NPCI</span>
-                    </div>
-                    <div className="p-2 rounded-xl bg-white/[0.04] border border-white/5 hover:border-emerald-500/30 transition">
-                      <span className="block font-bold text-white">CRED</span>
-                      <span className="text-[9px] text-rose-400 font-mono">Club</span>
-                    </div>
+                      <rect x="36" y="36" width="28" height="28" rx="6" fill="#0f172a" />
+                      <text x="50" y="54" fill="#94a3b8" fontSize="9" fontWeight="bold" textAnchor="middle" fontFamily="sans-serif">UPI</text>
+                    </svg>
                   </div>
                 </div>
 
-                {/* Instant Verification Simulation Action */}
+                {/* Instant Verification Simulation Action - DISABLED */}
                 <button
                   type="button"
-                  onClick={() => handleVerifyPayment('UPI_QR')}
-                  disabled={isProcessing}
-                  className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-xs tracking-wide flex items-center justify-center space-x-2 shadow-lg shadow-emerald-500/25 transition disabled:opacity-50"
+                  disabled={true}
+                  className="w-full py-3 px-4 rounded-2xl bg-white/[0.04] border border-white/10 text-slate-500 font-bold text-xs tracking-wide flex items-center justify-center space-x-2 cursor-not-allowed"
                 >
-                  {isProcessing ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 animate-spin text-slate-950" />
-                      <span>Verifying Razorpay UPI Network Settlement...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-4 h-4 text-slate-950" />
-                      <span>Simulate Instant UPI Scan & Settle ({formattedInr})</span>
-                      <ArrowRight className="w-4 h-4 text-slate-950" />
-                    </>
-                  )}
+                  <AlertCircle className="w-4 h-4 text-amber-400" />
+                  <span>UPI Payments Disabled (Deprecated)</span>
                 </button>
               </div>
             )}
 
-            {/* TAB 2: UPI ID / VPA */}
+            {/* TAB 2: UPI ID / VPA (DEPRECATED) */}
             {activeMethod === 'UPI_VPA' && (
-              <form onSubmit={handleSendVpaRequest} className="space-y-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-white block">Enter your UPI ID / Virtual Address (VPA)</label>
-                  <p className="text-[11px] text-slate-400">A payment collect request will be sent to your UPI app.</p>
+              <div className="space-y-4">
+                {/* Prominent Deprecation Banner */}
+                <div className="w-full p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs space-y-2">
+                  <div className="flex items-center space-x-2 text-amber-400 font-bold">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>UPI VPA Collect Requests Deprecated & Disabled</span>
+                  </div>
+                  <p className="text-slate-300 text-[11px] leading-relaxed">
+                    Virtual Payment Address (VPA) collect requests have been deprecated and disabled. In-flight requests cannot be dispatched. Please use Credit/Debit Card or NetBanking to complete payment.
+                  </p>
+                  <div className="pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setActiveMethod('CARD')}
+                      className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 text-xs font-bold inline-flex items-center space-x-1.5 transition shadow-sm"
+                    >
+                      <span>Switch to Credit / Debit Card</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
 
-                <div className="relative">
+                <div className="space-y-1 opacity-50">
+                  <label className="text-xs font-semibold text-white block">Enter your UPI ID / Virtual Address (VPA)</label>
+                  <p className="text-[11px] text-slate-400">Collect requests are permanently deactivated.</p>
+                </div>
+
+                <div className="relative opacity-50">
                   <input
                     type="text"
                     value={upiVpa}
-                    onChange={(e) => setUpiVpa(e.target.value)}
-                    placeholder="e.g. yourname@oksbi or phone@paytm"
-                    className="w-full px-4 py-3 rounded-xl bg-white/[0.05] border border-white/15 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 text-sm font-mono"
-                    required
+                    disabled={true}
+                    placeholder="e.g. yourname@oksbi"
+                    className="w-full px-4 py-3 rounded-xl bg-white/[0.05] border border-white/15 text-slate-400 placeholder-slate-600 text-sm font-mono cursor-not-allowed"
                   />
-                  <div className="absolute right-3 top-3 text-[10px] text-emerald-400 font-semibold uppercase">
-                    UPI Verified
+                  <div className="absolute right-3 top-3 text-[10px] text-amber-400 font-semibold uppercase">
+                    Channel Deprecated
                   </div>
                 </div>
 
-                {/* Quick VPA suggestions */}
-                <div className="flex items-center space-x-2 text-[10px] text-slate-400 flex-wrap gap-y-1">
-                  <span className="text-slate-500">Popular handles:</span>
-                  {['@oksbi', '@okhdfcbank', '@paytm', '@ybl', '@apl'].map(handle => (
-                    <button
-                      key={handle}
-                      type="button"
-                      onClick={() => {
-                        const base = upiVpa.includes('@') ? upiVpa.split('@')[0] : upiVpa || 'bheemaiah';
-                        setUpiVpa(`${base}${handle}`);
-                      }}
-                      className="px-2 py-0.5 rounded-md bg-white/[0.06] hover:bg-white/[0.12] text-slate-300 font-mono transition"
-                    >
-                      {handle}
-                    </button>
-                  ))}
-                </div>
-
-                {isVpaRequested ? (
-                  <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-xs space-y-3">
-                    <div className="flex items-start space-x-2">
-                      <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse mt-1 shrink-0" />
-                      <div>
-                        <p className="font-semibold text-emerald-300">Collect Request Dispatched!</p>
-                        <p className="text-[11px] text-slate-300 mt-0.5">{vpaMessage}</p>
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => handleVerifyPayment('UPI_COLLECT', upiVpa)}
-                      disabled={isProcessing}
-                      className="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center justify-center space-x-2 transition"
-                    >
-                      {isProcessing ? (
-                        <>
-                          <RefreshCw className="w-3.5 h-3.5 animate-spin text-slate-950" />
-                          <span>Confirming App Approval...</span>
-                        </>
-                      ) : (
-                        <>
-                          <CheckCircle2 className="w-4 h-4 text-slate-950" />
-                          <span>Simulate Approval in UPI App</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    type="submit"
-                    disabled={isProcessing}
-                    className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-xs tracking-wide flex items-center justify-center space-x-2 shadow-lg shadow-emerald-500/25 transition disabled:opacity-50"
-                  >
-                    {isProcessing ? (
-                      <>
-                        <RefreshCw className="w-4 h-4 animate-spin text-slate-950" />
-                        <span>Sending UPI Request...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>Send Collect Request to {upiVpa || 'UPI'}</span>
-                        <ArrowRight className="w-4 h-4 text-slate-950" />
-                      </>
-                    )}
-                  </button>
-                )}
-              </form>
+                <button
+                  type="button"
+                  disabled={true}
+                  className="w-full py-3 px-4 rounded-2xl bg-white/[0.04] border border-white/10 text-slate-500 font-bold text-xs tracking-wide flex items-center justify-center space-x-2 cursor-not-allowed"
+                >
+                  <AlertCircle className="w-4 h-4 text-amber-400" />
+                  <span>UPI VPA Collect Requests Disabled (Deprecated)</span>
+                </button>
+              </div>
             )}
 
             {/* TAB 3: CARDS (Visa / Mastercard / RuPay) */}
@@ -693,7 +551,7 @@ export const RazorpayUPIModal: React.FC<RazorpayUPIModalProps> = ({
             <div className="space-y-1">
               <h4 className="text-xl font-bold text-white tracking-tight">Payment Successfully Captured!</h4>
               <p className="text-xs text-slate-300">
-                Razorpay & UPI Network confirmed real-time settlement for <strong>{invoice.invoiceNumber}</strong>
+                Razorpay Secure Network confirmed real-time settlement for <strong>{invoice.invoiceNumber}</strong>
               </p>
             </div>
 
@@ -704,8 +562,8 @@ export const RazorpayUPIModal: React.FC<RazorpayUPIModalProps> = ({
                 <span className="text-emerald-300 font-bold">{completedPayment.paymentId}</span>
               </div>
               <div className="flex justify-between items-center py-1 border-b border-white/5">
-                <span className="text-slate-400">UPI Ref / RRN:</span>
-                <span className="text-white">{completedPayment.upiTransactionRef || 'UPI/428910284719/RZP'}</span>
+                <span className="text-slate-400">Gateway Ref:</span>
+                <span className="text-white">{completedPayment.gatewayRef || completedPayment.orderId}</span>
               </div>
               <div className="flex justify-between items-center py-1 border-b border-white/5">
                 <span className="text-slate-400">Receipt Number:</span>
@@ -716,8 +574,8 @@ export const RazorpayUPIModal: React.FC<RazorpayUPIModalProps> = ({
                 <span className="text-emerald-400 font-bold">{formattedInr}</span>
               </div>
               <div className="flex justify-between items-center py-1">
-                <span className="text-slate-400">Merchant VPA:</span>
-                <span className="text-slate-300">wildernessdojo@razorpay</span>
+                <span className="text-slate-400">Payment Channel:</span>
+                <span className="text-slate-300 font-semibold text-emerald-400">Secure Card / Netbanking</span>
               </div>
             </div>
 
@@ -740,8 +598,8 @@ export const RazorpayUPIModal: React.FC<RazorpayUPIModalProps> = ({
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
             <span>256-Bit SSL Encrypted Razorpay Gateway</span>
           </div>
-          <div className="font-mono text-[10px]">
-            NPCI UPI 2.0 Certified
+          <div className="font-mono text-[10px] text-amber-400/90">
+            UPI Deprecated &bull; Cards & Netbanking Supported
           </div>
         </div>
 

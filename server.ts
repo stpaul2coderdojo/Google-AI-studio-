@@ -1252,6 +1252,14 @@ Wilderness somatic encounters conducted by licensed physical therapists and inte
   app.post('/api/payments/process', zeroTrustAuthMiddleware, requirePermission('PROCESS_PAYMENTS'), (req: AuthenticatedRequest, res) => {
     const { invoiceId, amount, paymentMethod, cardDetails, insurancePayerId, patientName } = req.body;
 
+    if (paymentMethod === 'RAZORPAY_UPI') {
+      return res.status(410).json({
+        success: false,
+        deprecated: true,
+        error: 'UPI payments have been deprecated and disabled. Please select Credit/Debit Card or Bank ACH.'
+      });
+    }
+
     const authCode = `AUTH-${Math.floor(100000 + Math.random() * 900000)}`;
     const txHash = `0x${Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
     const timestamp = new Date().toISOString();
@@ -1305,7 +1313,9 @@ Wilderness somatic encounters conducted by licensed physical therapists and inte
         pendingCount: serverPurchaseInvoices.filter(i => i.status === 'PAYMENT_PENDING' || i.status === 'ISSUED').length,
         totalInvoicedInr: Math.round(totalInvoicedInr),
         paidRevenueInr: Math.round(paidInr),
-        gateway: 'Razorpay UPI & Smart Payments',
+        gateway: 'Razorpay Smart Payments (UPI Deprecated)',
+        upiStatus: 'DEPRECATED',
+        upiEnabled: false,
         merchantVpa: RAZORPAY_MERCHANT_VPA,
         keyId: RAZORPAY_KEY_ID
       }
@@ -1367,7 +1377,7 @@ Wilderness somatic encounters conducted by licensed physical therapists and inte
       discount: Number(discount) || 0,
       totalAmount: Number(totalAmount.toFixed(2)),
       status: 'ISSUED',
-      paymentGateway: 'RAZORPAY_UPI',
+      paymentGateway: 'RAZORPAY_CARD',
       notes: notes || '',
       linkedEncounterRecordId: linkedEncounterRecordId || undefined
     };
@@ -1445,6 +1455,9 @@ Wilderness somatic encounters conducted by licensed physical therapists and inte
       key_id: RAZORPAY_KEY_ID,
       merchant_name: RAZORPAY_MERCHANT_NAME,
       merchant_vpa: RAZORPAY_MERCHANT_VPA,
+      upi_status: 'DEPRECATED',
+      upi_enabled: false,
+      deprecation_notice: 'UPI payment channels are deprecated and deactivated. Please complete payment via Credit/Debit Cards or NetBanking.',
       upi_qr_payload: upiQrPayload,
       upi_deep_links: {
         generic: upiQrPayload,
@@ -1482,8 +1495,17 @@ Wilderness somatic encounters conducted by licensed physical therapists and inte
       razorpay_signature, 
       purchaseInvoiceId,
       upiVpa,
-      paymentMethod = 'UPI' 
+      paymentMethod = 'CARD' 
     } = req.body;
+
+    // Disallow deprecated UPI payments
+    if (paymentMethod === 'UPI' || paymentMethod === 'UPI_QR' || paymentMethod === 'UPI_COLLECT') {
+      return res.status(410).json({
+        success: false,
+        deprecated: true,
+        error: 'UPI payments have been deprecated and disabled. Please complete payment using Credit/Debit Card or NetBanking.'
+      });
+    }
 
     if (!razorpay_order_id || !razorpay_payment_id) {
       return res.status(400).json({ success: false, error: 'Order ID and Payment ID are required for verification.' });
@@ -1501,7 +1523,7 @@ Wilderness somatic encounters conducted by licensed physical therapists and inte
     const isSignatureValid = (razorpay_signature === expectedSignature) || Boolean(razorpay_payment_id.startsWith('pay_'));
 
     const receiptNumber = `RZP-REC-${Date.now().toString().slice(-8)}`;
-    const upiRef = `UPI/${Math.floor(100000000000 + Math.random() * 900000000000)}/RZP`;
+    const gatewayRef = `RZP/${Math.floor(100000000000 + Math.random() * 900000000000)}`;
     const paidAt = new Date().toISOString();
 
     // Update purchase invoice if present
@@ -1509,12 +1531,10 @@ Wilderness somatic encounters conducted by licensed physical therapists and inte
       const invoice = serverPurchaseInvoices.find(inv => inv.id === purchaseInvoiceId);
       if (invoice) {
         invoice.status = 'PAID';
-        invoice.paymentGateway = 'RAZORPAY_UPI';
+        invoice.paymentGateway = paymentMethod.startsWith('NETBANKING') ? 'NET_BANKING' : 'RAZORPAY_CARD';
         invoice.razorpayOrderId = razorpay_order_id;
         invoice.razorpayPaymentId = razorpay_payment_id;
         invoice.razorpaySignature = effectiveSignature;
-        invoice.upiVpa = upiVpa || 'customer@oksbi';
-        invoice.upiTransactionRef = upiRef;
         invoice.paidAt = paidAt;
         invoice.receiptNumber = receiptNumber;
         invoice.notes = `${invoice.notes || ''} [Paid via Razorpay ${paymentMethod} on ${new Date().toLocaleDateString()}]`.trim();
@@ -1527,7 +1547,7 @@ Wilderness somatic encounters conducted by licensed physical therapists and inte
       'SUPER_ADMIN',
       req.ip || '127.0.0.1',
       'SUCCESS',
-      `Razorpay payment ${razorpay_payment_id} verified for order ${razorpay_order_id} via ${paymentMethod} (${upiVpa || 'Card/Netbanking'})`
+      `Razorpay payment ${razorpay_payment_id} verified for order ${razorpay_order_id} via ${paymentMethod}`
     );
 
     res.json({
@@ -1537,33 +1557,19 @@ Wilderness somatic encounters conducted by licensed physical therapists and inte
       paymentId: razorpay_payment_id,
       orderId: razorpay_order_id,
       receiptNumber,
-      upiTransactionRef: upiRef,
+      gatewayRef,
       paidAt,
       settlementStatus: 'CAPTURED',
-      gatewayResponse: 'RZP_PAYMENT_CAPTURED_AND_SETTLED_WITH_UPI_AUTOREMIT'
+      gatewayResponse: 'RZP_PAYMENT_CAPTURED_AND_SETTLED_VIA_SECURE_GATEWAY'
     });
   });
 
-  // Razorpay API: Direct UPI Intent / Collect Request
+  // Razorpay API: Direct UPI Intent / Collect Request (DEPRECATED & DISABLED)
   app.post('/api/razorpay/upi-intent', (req, res) => {
-    const { vpa, amount, purchaseInvoiceId } = req.body;
-
-    if (!vpa || !vpa.includes('@')) {
-      return res.status(400).json({ success: false, error: 'Valid UPI Virtual Private Address (VPA) is required (e.g. user@oksbi).' });
-    }
-
-    const collectRequestId = `req_${crypto.randomBytes(8).toString('hex')}`;
-    const invoice = serverPurchaseInvoices.find(inv => inv.id === purchaseInvoiceId);
-
-    res.json({
-      success: true,
-      collectRequestId,
-      vpa: vpa.trim().toLowerCase(),
-      status: 'COLLECT_REQUEST_SENT',
-      expiresInSeconds: 300,
-      message: `UPI Payment request of ₹${Number(amount || 0).toLocaleString()} sent to ${vpa}. Please approve the prompt in your UPI app (Google Pay, PhonePe, Paytm, or BHIM).`,
-      merchant: RAZORPAY_MERCHANT_NAME,
-      invoiceNumber: invoice?.invoiceNumber || 'PINV-DIRECT'
+    return res.status(410).json({
+      success: false,
+      deprecated: true,
+      error: 'UPI payments and VPA collect requests have been deprecated and permanently disabled. Please use Credit/Debit Card or NetBanking.'
     });
   });
 

@@ -178,12 +178,12 @@ export const PurchaseInvoicingPanel: React.FC<PurchaseInvoicingPanelProps> = ({
             <div>
               <div className="flex items-center space-x-2">
                 <h2 className="text-xl font-black text-white tracking-tight">Purchase Invoicing & Direct Gateway</h2>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono font-semibold border border-emerald-500/30">
-                  Razorpay & UPI Active
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono font-semibold border border-amber-500/30">
+                  Razorpay Active &bull; UPI Deprecated
                 </span>
               </div>
               <p className="text-xs text-slate-300">
-                Direct sanctuary sales, somatic retreat passes, martial equipment procurement, and instant UPI payments.
+                Direct sanctuary sales, somatic retreat passes, and equipment procurement. Secure card/netbanking payments (UPI deprecated).
               </p>
             </div>
           </div>
@@ -231,7 +231,7 @@ export const PurchaseInvoicingPanel: React.FC<PurchaseInvoicingPanelProps> = ({
             ₹{Math.round(totalPaidInr).toLocaleString()}
           </p>
           <p className="text-[11px] text-slate-400 font-mono">
-            {paidCount} paid &bull; Instant Razorpay UPI Auto-Capture
+            {paidCount} paid &bull; Instant Razorpay Auto-Capture (UPI Deprecated)
           </p>
         </div>
 
@@ -240,30 +240,32 @@ export const PurchaseInvoicingPanel: React.FC<PurchaseInvoicingPanelProps> = ({
           <div className="flex items-center justify-between text-xs text-slate-400">
             <span className="font-medium">Pending Invoices</span>
             <span className="p-1 rounded-lg bg-amber-500/20 text-amber-300 font-mono text-[10px]">
-              AWAITING UPI
+              AWAITING SETTLEMENT
             </span>
           </div>
           <p className="text-2xl font-black text-amber-300 font-mono tracking-tight">
             {pendingCount}
           </p>
           <p className="text-[11px] text-slate-400">
-            Active QR codes and collect requests in flight
+            Pending invoices awaiting card/netbanking settlement
           </p>
         </div>
 
         {/* UPI Gateway Status */}
         <div className="p-4 rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-xl shadow-lg space-y-2">
           <div className="flex items-center justify-between text-xs text-slate-400">
-            <span className="font-medium">Razorpay UPI Gateway</span>
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="font-medium">Razorpay Gateway (Cards)</span>
+            <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono font-bold border border-amber-500/30">
+              UPI DEPRECATED
+            </span>
           </div>
           <div className="flex items-baseline space-x-1.5">
-            <span className="text-2xl font-black text-teal-300 font-mono tracking-tight">99.8%</span>
-            <span className="text-xs text-slate-400">Success Rate</span>
+            <span className="text-2xl font-black text-teal-300 font-mono tracking-tight">Active</span>
+            <span className="text-xs text-slate-400">Credit/Debit Cards</span>
           </div>
           <p className="text-[11px] text-slate-400 font-mono flex items-center space-x-1">
-            <Smartphone className="w-3 h-3 text-emerald-400" />
-            <span className="truncate">VPA: wildernessdojo@razorpay</span>
+            <CreditCard className="w-3 h-3 text-emerald-400" />
+            <span className="truncate">Cards & Netbanking Active &bull; UPI Disabled</span>
           </p>
         </div>
       </div>
@@ -413,10 +415,10 @@ export const PurchaseInvoicingPanel: React.FC<PurchaseInvoicingPanelProps> = ({
                             <button
                               onClick={() => setSelectedInvoiceForPayment(inv)}
                               className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-xs flex items-center space-x-1.5 shadow-md shadow-emerald-500/20 transition"
-                              title="Pay via Razorpay / UPI QR"
+                              title="Pay via Razorpay (Cards / Netbanking)"
                             >
-                              <Smartphone className="w-3.5 h-3.5" />
-                              <span>Pay with UPI</span>
+                              <CreditCard className="w-3.5 h-3.5" />
+                              <span>Pay via Razorpay</span>
                             </button>
                           ) : (
                             <button
@@ -458,11 +460,9 @@ export const PurchaseInvoicingPanel: React.FC<PurchaseInvoicingPanelProps> = ({
                 return {
                   ...i,
                   status: 'PAID' as const,
-                  paymentGateway: 'RAZORPAY_UPI' as const,
+                  paymentGateway: (paymentData.paymentMethod?.startsWith('NETBANKING') ? 'NET_BANKING' : 'RAZORPAY_CARD') as any,
                   razorpayPaymentId: paymentData.paymentId,
                   razorpayOrderId: paymentData.orderId,
-                  upiVpa: paymentData.upiVpa || 'customer@oksbi',
-                  upiTransactionRef: paymentData.upiTransactionRef,
                   paidAt: paymentData.paidAt || new Date().toISOString(),
                   receiptNumber: paymentData.receiptNumber
                 };
@@ -544,7 +544,7 @@ export const PurchaseInvoicingPanel: React.FC<PurchaseInvoicingPanelProps> = ({
                     onChange={(e) => setCurrency(e.target.value as any)}
                     className="w-full px-3 py-2 rounded-xl bg-[#0e2420] border border-white/10 text-white focus:outline-none focus:border-emerald-500"
                   >
-                    <option value="INR">INR (₹ Indian Rupee &bull; UPI Direct)</option>
+                    <option value="INR">INR (₹ Indian Rupee &bull; Cards / Netbanking)</option>
                     <option value="USD">USD ($ US Dollar)</option>
                   </select>
                 </div>
@@ -768,8 +768,8 @@ export const PurchaseInvoicingPanel: React.FC<PurchaseInvoicingPanelProps> = ({
               </div>
               {selectedInvoiceDetail.status === 'PAID' && (
                 <div className="text-right text-[11px] text-slate-300">
-                  <span className="text-emerald-400 font-bold block">PAID VIA RAZORPAY UPI</span>
-                  <span className="text-slate-400 font-mono">{selectedInvoiceDetail.upiVpa || 'UPI 2.0'}</span>
+                  <span className="text-emerald-400 font-bold block">PAID VIA RAZORPAY</span>
+                  <span className="text-slate-400 font-mono">Secure Gateway</span>
                 </div>
               )}
             </div>
@@ -784,8 +784,8 @@ export const PurchaseInvoicingPanel: React.FC<PurchaseInvoicingPanelProps> = ({
                   }}
                   className="flex-1 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center justify-center space-x-2 transition"
                 >
-                  <Smartphone className="w-4 h-4" />
-                  <span>Pay with Razorpay / UPI</span>
+                  <CreditCard className="w-4 h-4" />
+                  <span>Pay with Razorpay (Cards / Netbanking)</span>
                 </button>
               ) : (
                 <button
